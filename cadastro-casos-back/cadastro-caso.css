@@ -1,0 +1,102 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: white;
+}
+
+header {
+    background-color: #1E2A38;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    align-items: center;
+}
+
+.menu-icon {
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.user-icon {
+    font-size: 24px;
+}
+
+.container {
+    width: 90%;
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: white;    
+    padding: 30px;
+    border-radius: 0px;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+form {
+        margin: 0 auto;
+        max-width: 800px;
+}
+
+label {
+    margin: 10px 0 3px;
+    font-weight: 500;
+    color: #333;
+}
+
+input, select, textarea {
+    padding: 10px 5px;
+    border: none;
+    border-bottom: 2px solid #ccc;
+    border-radius: 0;
+    font-size: 16px;
+    background-color: transparent;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-bottom: 2px solid #6c63ff;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+button {
+    background-color: #0c1547;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+button:hover {
+    background-color: #070f33;
+}
+.btn-custom {
+    background-color: #1E2A38;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 12px 24px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.btn-custom:hover {
+    background-color: #293c52;
+    color: white;
+}
