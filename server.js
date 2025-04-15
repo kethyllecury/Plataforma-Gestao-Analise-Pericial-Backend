@@ -21,7 +21,9 @@ app.listen(process.env.PORT, () =>
 
 
 const authRoutes = require("./routes/auth");
+const casosRoutes = require("./routes/caso-routes")
 
 app.use("/api/auth", authRoutes);
+app.use("/api/casos", casosRoutes);
 
 
