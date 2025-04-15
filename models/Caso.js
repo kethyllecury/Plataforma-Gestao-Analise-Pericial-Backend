@@ -10,11 +10,11 @@ const CasoSchema = new mongoose.Schema({
         type: String, 
         required: true,
         enum: [
-            "Lesões Corporais",
+            "Lesão Corporal",
             "Identificação por Arcos Dentais",
             "Estimativa de Idade",
-            "Exames de Marcas de Mordida",
-            "Coletas de DNA"
+            "Exame de Marcas de Mordida",
+            "Coleta de DNA"
         ],
     },
     peritoResponsavel: {
