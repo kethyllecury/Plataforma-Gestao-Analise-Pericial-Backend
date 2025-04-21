@@ -4,7 +4,7 @@ const CasoSchema = new mongoose.Schema({
     nome: { type: String, required: true, unique: true },
     local: { type: String, required: true},
     data: { type: Date, required: true },
-    hora: { type: String, required: true }, // Armazena a hora como string (ex: "14:30")
+    hora: { type: String, required: true }, 
     descricao: { type: String, required: true },
     tipo: { 
         type: String, 
