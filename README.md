@@ -170,7 +170,7 @@ O projeto atualmente não inclui testes automatizados. Para adicionar testes, vo
 ## Colaboradores
 Agradecemos aos seguintes colaboradores pelo seu trabalho neste projeto:
 - [Gabriel de Santana](https://github.com/gabrieldsantana).
-- [Henrique Fernandes]((https://github.com/henriferi)).
+- [Henrique Fernandes](https://github.com/henriferi).
 - [Kethylle Cury](https://github.com/kethyllecury)
 
 ## Licença
