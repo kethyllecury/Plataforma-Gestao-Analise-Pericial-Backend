@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const CasoSchema = new mongoose.Schema({
-    nome: { type: String, required: true, unique: true },
+    nome: { type: String, required: true },
     local: { type: String, required: true},
     data: { type: Date, required: true },
     hora: { type: String, required: true }, 
