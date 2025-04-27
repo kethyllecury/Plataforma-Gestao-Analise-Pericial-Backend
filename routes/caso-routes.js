@@ -9,41 +9,43 @@ const {createCasoValidator, updateCasoValidator} = require("../validators/caso-v
 // POST /casos - Criar um novo caso
 router.post("/", createCasoValidator, async (req, res) => {
     try {
-    // Verificar erros de validação
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
 
-    // Verificar se o perito existe e tem cargo "perito"
-    const perito = await User.findById(req.body.peritoResponsavel);
-    if (!perito) {
-        return res.status(404).json({ error: "Perito não encontrado" });
-    }
-    if (perito.cargo !== "perito") {
-        return res
-        .status(400)
-        .json({ error: "O usuário especificado não é um perito" });
-    }
+        const perito = await User.findById(req.body.peritoResponsavel);
+        if (!perito) {
+            return res.status(404).json({ error: "Perito não encontrado" });
+        }
+        if (perito.cargo !== "perito") {
+            return res.status(400).json({ error: "O usuário especificado não é um perito" });
+        }
 
-    // Verificar unicidade do nome
-    const casoExistente = await Caso.findOne({ nome: req.body.nome });
-    if (casoExistente) {
-        return res.status(400).json({ error: "Nome do caso já existe" });
-    }
+        const casoExistente = await Caso.findOne({ nome: req.body.nome });
+        if (casoExistente) {
+            return res.status(400).json({ error: "Nome do caso já existe" });
+        }
 
-    // Criar novo caso
-    const novoCaso = new Caso(req.body);
-    await novoCaso.save();
-    res.status(201).json(novoCaso);
+        if (req.body.data) {
+            console.log('Data recebida:', req.body.data); 
+            req.body.data = new Date(req.body.data);  
+            console.log('Data convertida:', req.body.data);  
+        }               
+
+        const novoCaso = new Caso(req.body);
+        await novoCaso.save();
+        res.status(201).json(novoCaso);
+
     } catch (error) {
-    console.error(error);
-    if (error.code === 11000) {
-        return res.status(400).json({ error: "Nome do caso já existe" });
-    }
-    res.status(500).json({ error: "Erro ao criar caso" });
+        console.error(error);
+        if (error.code === 11000) {
+            return res.status(400).json({ error: "Nome do caso já existe" });
+        }
+        res.status(500).json({ error: "Erro ao criar caso" });
     }
 });
+
 
 // GET /casos - Listar todos os casos
 router.get("/", async (req, res) => {

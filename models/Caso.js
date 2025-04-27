@@ -1,9 +1,7 @@
-const mongoose = require("mongoose");
-
 const CasoSchema = new mongoose.Schema({
     nome: { type: String, required: true },
     local: { type: String, required: true},
-    data: { type: Date, required: true },
+    dataAbertura: { type: Date, required: true },  // Alterar o nome aqui para dataAbertura
     hora: { type: String, required: true }, 
     descricao: { type: String, required: true },
     tipo: { 
@@ -29,8 +27,6 @@ const CasoSchema = new mongoose.Schema({
     status: {
         type: String, 
         enum: ["Em andamento", "Finalizado", "Arquivado"],
-        default: "Em andamento" // Definindo como default pois não será solicitado no formlário, mas poderá ser alterado depois
+        default: "Em andamento" // Definindo como default pois não será solicitado no formulário, mas poderá ser alterado depois
     }
 });
-
-module.exports = mongoose.model("Caso", CasoSchema);
