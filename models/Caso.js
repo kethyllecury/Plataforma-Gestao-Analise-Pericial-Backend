@@ -1,5 +1,5 @@
 const CasoSchema = new mongoose.Schema({
-    nome: { type: String, required: true, unique: true },
+    nome: { type: String, required: true },
     local: { type: String, required: true},
     dataAbertura: { type: Date, required: true },  // Alterar o nome aqui para dataAbertura
     hora: { type: String, required: true }, 
@@ -20,7 +20,10 @@ const CasoSchema = new mongoose.Schema({
         ref: "User", // Referencia o modelo User
         required: true,
     },
-    anexos: [{ type: String }], // Array de strings para arquivos em base64
+    anexos: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Evidencia" // Referencia o modelo Evidencia
+    }], 
     status: {
         type: String, 
         enum: ["Em andamento", "Finalizado", "Arquivado"],
