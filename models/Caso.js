@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const CasoSchema = new mongoose.Schema({
     nome: { type: String, required: true },
     local: { type: String, required: true},
