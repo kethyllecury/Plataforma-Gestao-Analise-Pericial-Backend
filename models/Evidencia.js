@@ -1,8 +1,25 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const Evidencia = new mongoose.Schema({
-    titulo: { type: String, required: true },
-    anexo: { type: String, required: true }
-})
+const evidenciaSchema = new mongoose.Schema({
+    casoId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Caso', 
+        required: true 
+    },
+    arquivoId: { type: mongoose.Schema.Types.ObjectId, required: true }, // ID do arquivo no GridFS
+    nomeArquivo: { type: String, required: true }, // Nome original do arquivo
+    tipoArquivo: { type: String, required: true }, // MIME type (ex.: image/jpeg, application/pdf)
+    tipoEvidencia: { 
+        type: String, 
+        enum: [
+            'radiografia', 
+            'odontograma',
+            'outro'
+        ], 
+        required: true 
+    },
+    descricao: { type: String },
+    createdAt: { type: Date, default: Date.now },
+});
 
-module.exports = mongoose.model("Evidencia", CasoSchema);
+module.exports = mongoose.model('Evidencia', evidenciaSchema);

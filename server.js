@@ -1,29 +1,37 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 const app = express();
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("🔥 MongoDB conectado!"))
-  .catch((err) => console.log("Erro ao conectar ao MongoDB:", err));
+// Conexão com MongoDB
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('Conectado ao MongoDB'))
+  .catch((err) => console.error('Erro ao conectar ao MongoDB:', err));
 
-  
+// Rotas
+const autenticacaoRotas = require('./routes/autenticacaoRoute');
+const casosRotas = require('./routes/casosRoute');
+const evidenciasRotas = require('./routes/evidenciasRoute');
+const relatoriosRotas = require('./routes/relatoriosRoute');
 
-app.listen(process.env.PORT, () =>
-  console.log(`🚀 Servidor rodando na porta ${process.env.PORT}`)
-);
+app.use('/api/auth', autenticacaoRotas);
+app.use('/api/casos', casosRotas);
+app.use('/api/evidencias', evidenciasRotas);
+app.use('/api/relatorios', relatoriosRotas);
 
+// Configuração do Swagger
+const swaggerConfig = require('./swagger');
+swaggerConfig(app);
 
-const authRoutes = require("./routes/user-routes");
-const casosRoutes = require("./routes/caso-routes")
+app.get('/', (req, res) => res.send('Backend da Plataforma de Gestão Forense'));
 
-app.use("/api/auth", authRoutes);
-app.use("/api/casos", casosRoutes);
-
-
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));

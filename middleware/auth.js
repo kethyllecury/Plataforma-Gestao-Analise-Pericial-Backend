@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../models/Usuario");
 
 const verifyToken = async (req, res, next) => {
   try {
@@ -9,7 +9,8 @@ const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id).select("-senha");
 
-    if (!req.user) return res.status(401).json({ message: "Usuário não encontrado!" });
+    if (!req.user)
+      return res.status(401).json({ message: "Usuário não encontrado!" });
 
     next();
   } catch (error) {
