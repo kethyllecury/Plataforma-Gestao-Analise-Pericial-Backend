@@ -14,6 +14,10 @@ const options = {
             url: 'http://localhost:5000',
             description: 'Servidor local',
         },
+        {
+            url: 'https://plataforma-gestao-analise-pericial.onrender.com',
+            description: 'Servidor em nuvem',
+        },
         ],
         components: {
         securitySchemes: {
