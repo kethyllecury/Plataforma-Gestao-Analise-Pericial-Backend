@@ -5,6 +5,7 @@ const Relatorio = require('../models/Relatorio');
 const { fazerUploadArquivoGridFS, obterArquivoGridFS } = require('../utils/gridfs');
 const { validarGerarRelatorio, validarAssinarRelatorio } = require('../validators/relatoriosValidator');
 const { verificarErrosValidacao } = require('../utils/validacao');
+const { verifyToken } = require('../middleware/auth');
 const router = express.Router();
 
 /**
@@ -61,7 +62,7 @@ const gerarPDF = (conteudo, assinatura = null) => {
  *       500:
  *         description: Erro interno do servidor
  */
-router.post('/', validarGerarRelatorio, verificarErrosValidacao, async (req, res) => {
+router.post('/', verifyToken, validarGerarRelatorio, verificarErrosValidacao, async (req, res) => {
     const { casoId, conteudo } = req.body;
     try {
         const pdfBuffer = await gerarPDF(conteudo);
@@ -115,7 +116,7 @@ router.post('/', validarGerarRelatorio, verificarErrosValidacao, async (req, res
  *       500:
  *         description: Erro interno do servidor
  */
-router.put('/:id/assinar', validarAssinarRelatorio, verificarErrosValidacao, async (req, res) => {
+router.put('/:id/assinar', verifyToken, validarAssinarRelatorio, verificarErrosValidacao, async (req, res) => {
     const { id } = req.params;
     const { assinatura } = req.body;
 
@@ -169,7 +170,7 @@ router.put('/:id/assinar', validarAssinarRelatorio, verificarErrosValidacao, asy
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/:arquivoId', async (req, res) => {
+router.get('/:arquivoId', verifyToken, async (req, res) => {
     try {
         const arquivoId = new mongoose.Types.ObjectId(req.params.arquivoId);
         const relatorio = await Relatorio.findOne({ arquivoId });

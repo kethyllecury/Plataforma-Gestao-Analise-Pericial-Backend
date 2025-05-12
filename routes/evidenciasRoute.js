@@ -5,6 +5,7 @@ const Evidencia = require('../models/Evidencia');
 const { fazerUploadArquivoGridFS, inicializarGridFS, obterArquivoGridFS } = require('../utils/gridfs');
 const { validarUploadEvidencia, validarListarEvidencias } = require('../validators/evidenciasValidator');
 const { verificarErrosValidacao } = require('../utils/validacao');
+const { verifyToken } = require('../middleware/auth');
 const router = express.Router();
 
 /**
@@ -60,7 +61,7 @@ const upload = multer({
  *       500:
  *         description: Erro interno do servidor
  */
-router.post('/', upload.single('arquivo'), validarUploadEvidencia, verificarErrosValidacao, async (req, res) => {
+router.post('/', verifyToken, upload.single('arquivo'), validarUploadEvidencia, verificarErrosValidacao, async (req, res) => {
     const { casoId, tipoEvidencia, descricao } = req.body;
     const arquivo = req.file;
 
@@ -144,7 +145,7 @@ router.get('/', validarListarEvidencias, verificarErrosValidacao, async (req, re
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/:arquivoId', async (req, res) => {
+router.get('/:arquivoId', verifyToken, async (req, res) => {
     try {
         const arquivoId = new mongoose.Types.ObjectId(req.params.arquivoId);
         const arquivo = await Evidencia.findOne({ arquivoId });

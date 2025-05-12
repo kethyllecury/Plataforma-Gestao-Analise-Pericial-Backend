@@ -5,6 +5,7 @@ const Caso = require("../models/Caso");
 const User = require("../models/Usuario");
 const { validationResult } = require("express-validator");
 const { validarCriarCaso } = require("../validators/casosValidator");
+const { verifyToken } = require("../middleware/auth");
 
 /**
  * @swagger
@@ -58,7 +59,7 @@ const { validarCriarCaso } = require("../validators/casosValidator");
  *       500:
  *         description: Erro interno do servidor
  */
-router.post("/", validarCriarCaso, async (req, res) => {
+router.post("/", verifyToken, validarCriarCaso, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -112,7 +113,7 @@ router.post("/", validarCriarCaso, async (req, res) => {
  *       500:
  *         description: Erro interno do servidor
  */
-router.get("/", async (req, res) => {
+router.get("/", verifyToken, async (req, res) => {
   try {
     const casos = await Caso.find().populate("peritoResponsavel", "nome email");
     res.json(casos);
@@ -146,7 +147,7 @@ router.get("/", async (req, res) => {
  *       500:
  *         description: Erro interno do servidor
  */
-router.get("/:id", async (req, res) => {
+router.get("/:id", verifyToken, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "ID inválido" });
@@ -213,7 +214,7 @@ router.get("/:id", async (req, res) => {
  *       500:
  *         description: Erro interno do servidor
  */
-router.put("/:id", validarCriarCaso, async (req, res) => {
+router.put("/:id", verifyToken, validarCriarCaso, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -287,7 +288,7 @@ router.put("/:id", validarCriarCaso, async (req, res) => {
  *       500:
  *         description: Erro interno do servidor
  */
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "ID inválido" });
