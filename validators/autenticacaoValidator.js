@@ -25,6 +25,10 @@ const validarLogin = [
 ];
 
 const validarAdmin = (req, res, next) => {
+    if(req.user == undefined) {
+        return res.status(403).json({ message: "Faça o login para efetuar operação!"})
+    }
+
     if (req.user.cargo !== "admin") {
     return res.status(403).json({ message: "Acesso restrito à administradores!"})
     }
