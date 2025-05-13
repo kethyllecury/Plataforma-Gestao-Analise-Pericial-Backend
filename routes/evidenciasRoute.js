@@ -66,7 +66,7 @@ router.post('/', verifyToken, upload.single('arquivo'), validarUploadEvidencia, 
     const arquivo = req.file;
 
     if (!arquivo) {
-        return res.status(400).json({ erro: 'Nenhum arquivo enviado' });
+        return res.status(400).json({ success: false, erro: 'Nenhum arquivo enviado' });
     }
 
     try {
@@ -81,8 +81,8 @@ router.post('/', verifyToken, upload.single('arquivo'), validarUploadEvidencia, 
         });
         res.status(201).json(evidencia);
     } catch (error) {
-        console.error('Erro ao salvar evidência:', error);
-        res.status(500).json({ erro: 'Erro ao fazer upload de evidência' });
+        console.error({success: false, 'Erro ao salvar evidência:': error});
+        res.status(500).json({ success: false, erro: 'Erro ao fazer upload de evidência' });
     }
 });
 
@@ -113,8 +113,8 @@ router.get('/', validarListarEvidencias, verificarErrosValidacao, async (req, re
         const evidencias = await Evidencia.find({ casoId });
         res.json(evidencias);
     } catch (error) {
-        console.error('Erro ao listar evidências:', error);
-        res.status(500).json({ erro: 'Erro ao listar evidências' });
+        console.error({ success: false, 'Erro ao listar evidências:': error });
+        res.status(500).json({ success: false, erro: 'Erro ao listar evidências' });
     }
 });
 
@@ -151,7 +151,7 @@ router.get('/:arquivoId', verifyToken, async (req, res) => {
         const arquivo = await Evidencia.findOne({ arquivoId });
 
         if (!arquivo) {
-            return res.status(404).json({ erro: 'Evidência não encontrada' });
+            return res.status(404).json({ success: false, erro: 'Evidência não encontrada' });
         }
 
         res.set('Content-Type', arquivo.tipoArquivo);
@@ -162,11 +162,11 @@ router.get('/:arquivoId', verifyToken, async (req, res) => {
 
         downloadStream.on('error', (err) => {
             console.error('Erro ao recuperar arquivo:', err);
-            res.status(500).json({ erro: 'Erro ao recuperar arquivo' });
+            res.status(500).json({ success: false, erro: 'Erro ao recuperar arquivo' });
         });
     } catch (error) {
         console.error('Erro:', error);
-        res.status(500).json({ erro: 'Erro ao recuperar arquivo' });
+        res.status(500).json({ success: false, erro: 'Erro ao recuperar arquivo' });
     }
 });
 
