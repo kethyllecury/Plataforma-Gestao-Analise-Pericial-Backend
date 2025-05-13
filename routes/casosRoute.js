@@ -2,10 +2,10 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const Caso = require("../models/Caso");
-const User = require("../models/Usuario");
-const { validationResult } = require("express-validator");
+const Usuario = require("../models/Usuario");
 const { validarCriarCaso } = require("../validators/casosValidator");
 const { verifyToken } = require("../middleware/auth");
+const { verificarErrosValidacao } = require("../utils/validacao"); // Importar o middleware
 
 /**
  * @swagger
@@ -44,7 +44,7 @@ const { verifyToken } = require("../middleware/auth");
  *                 example: "Lesão Corporal"
  *               peritoResponsavel:
  *                 type: string
- *                 example: "someUserId"
+ *                 example: "UsuarioId"
  *               data:
  *                 type: string
  *                 format: date
@@ -54,48 +54,47 @@ const { verifyToken } = require("../middleware/auth");
  *         description: Caso criado com sucesso
  *       400:
  *         description: Erro de validação ou nome já existente
+ *       401:
+ *         description: Token não fornecido ou inválido
  *       404:
  *         description: Perito não encontrado
  *       500:
  *         description: Erro interno do servidor
  */
-router.post("/", verifyToken, validarCriarCaso, async (req, res) => {
+router.post("/", verifyToken, validarCriarCaso, verificarErrosValidacao, async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    const perito = await Usuario.findById(req.body.peritoResponsavel);
+    if (!perito) {
+      return res.status(404).json({ success: false, error: "Perito não encontrado" });
     }
 
-    const perito = await User.findById(req.body.peritoResponsavel);
-    if (!perito) {
-      return res.status(404).json({ error: "Perito não encontrado" });
-    }
     if (perito.cargo !== "perito") {
       return res
         .status(400)
-        .json({ error: "O usuário especificado não é um perito" });
+        .json({ success: false, error: "O usuário especificado não é um perito" });
     }
 
     const casoExistente = await Caso.findOne({ nome: req.body.nome });
     if (casoExistente) {
-      return res.status(400).json({ error: "Nome do caso já existe" });
+      return res.status(400).json({ success: false, error: "Nome do caso já existe" });
     }
 
-    if (req.body.data) {
-      console.log("Data recebida:", req.body.data);
-      req.body.data = new Date(req.body.data);
-      console.log("Data convertida:", req.body.data);
+    if (!validarData(req.body.data)) {
+      return res.status(400).json({ success: false, error: "Data inválida" });
     }
 
     const novoCaso = new Caso(req.body);
     await novoCaso.save();
     res.status(201).json(novoCaso);
+
   } catch (error) {
-    console.error(error);
+    console.error("Erro ao criar caso:", error.message);
+
     if (error.code === 11000) {
-      return res.status(400).json({ error: "Nome do caso já existe" });
+      return res.status(400).json({ success: false, error: "Nome do caso já existe" });
     }
-    res.status(500).json({ error: "Erro ao criar caso" });
+
+    res.status(500).json({ success: false, error: "Erro ao criar caso", detalhes: error.message });
   }
 });
 
@@ -110,6 +109,8 @@ router.post("/", verifyToken, validarCriarCaso, async (req, res) => {
  *     responses:
  *       200:
  *         description: Lista de casos
+ *       401:
+ *         description: Token não fornecido ou inválido
  *       500:
  *         description: Erro interno do servidor
  */
@@ -118,8 +119,8 @@ router.get("/", verifyToken, async (req, res) => {
     const casos = await Caso.find().populate("peritoResponsavel", "nome email");
     res.json(casos);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao listar casos" });
+    console.error("Erro ao listar casos:", error.message);
+    res.status(500).json({ success: false, error: "Erro ao listar casos", detalhes: error.message });
   }
 });
 
@@ -142,6 +143,8 @@ router.get("/", verifyToken, async (req, res) => {
  *         description: Caso encontrado
  *       400:
  *         description: ID inválido
+ *       401:
+ *         description: Token não fornecido ou inválido
  *       404:
  *         description: Caso não encontrado
  *       500:
@@ -150,7 +153,7 @@ router.get("/", verifyToken, async (req, res) => {
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: "ID inválido" });
+      return res.status(400).json({ success: false, error: "ID inválido" });
     }
 
     const caso = await Caso.findById(req.params.id).populate(
@@ -158,12 +161,12 @@ router.get("/:id", verifyToken, async (req, res) => {
       "nome email"
     );
     if (!caso) {
-      return res.status(404).json({ error: "Caso não encontrado" });
+      return res.status(404).json({ success: false, error: "Caso não encontrado" });
     }
     res.json(caso);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao buscar caso" });
+    console.error("Erro ao buscar caso:", error.message);
+    res.status(500).json({ success: false, error: "Erro ao buscar caso", detalhes: error.message });
   }
 });
 
@@ -203,49 +206,46 @@ router.get("/:id", verifyToken, async (req, res) => {
  *                 example: "Lesão Corporal"
  *               peritoResponsavel:
  *                 type: string
- *                 example: "someUserId"
+ *                 example: "someUsuarioId"
  *     responses:
  *       200:
  *         description: Caso atualizado com sucesso
  *       400:
  *         description: Erro de validação ou nome já existente
+ *       401:
+ *         description: Token não fornecido ou inválido
  *       404:
  *         description: Caso ou perito não encontrado
  *       500:
  *         description: Erro interno do servidor
  */
-router.put("/:id", verifyToken, validarCriarCaso, async (req, res) => {
+router.put("/:id", verifyToken, validarCriarCaso, verificarErrosValidacao, async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: "ID inválido" });
+      return res.status(400).json({ success: false, error: "ID inválido" });
     }
 
     const caso = await Caso.findById(req.params.id);
     if (!caso) {
-      return res.status(404).json({ error: "Caso não encontrado" });
+      return res.status(404).json({ success: false, error: "Caso não encontrado" });
     }
 
     if (req.body.peritoResponsavel) {
-      const perito = await User.findById(req.body.peritoResponsavel);
+      const perito = await Usuario.findById(req.body.peritoResponsavel);
       if (!perito) {
-        return res.status(404).json({ error: "Perito não encontrado" });
+        return res.status(404).json({ success: false, error: "Perito não encontrado" });
       }
       if (perito.cargo !== "perito") {
         return res
           .status(400)
-          .json({ error: "O usuário especificado não é um perito" });
+          .json({ success: false, error: "O usuário especificado não é um perito" });
       }
     }
 
     if (req.body.nome && req.body.nome !== caso.nome) {
       const casoExistente = await Caso.findOne({ nome: req.body.nome });
       if (casoExistente) {
-        return res.status(400).json({ error: "Nome do caso já existe" });
+        return res.status(400).json({ success: false, error: "Nome do caso já existe" });
       }
     }
 
@@ -256,11 +256,11 @@ router.put("/:id", verifyToken, validarCriarCaso, async (req, res) => {
     );
     res.json(casoAtualizado);
   } catch (error) {
-    console.error(error);
+    console.error("Erro ao atualizar caso:", error.message);
     if (error.code === 11000) {
-      return res.status(400).json({ error: "Nome do caso já existe" });
+      return res.status(400).json({ success: false, error: "Nome do caso já existe" });
     }
-    res.status(500).json({ error: "Erro ao atualizar caso" });
+    res.status(500).json({ success: false, error: "Erro ao atualizar caso", detalhes: error.message });
   }
 });
 
@@ -283,6 +283,8 @@ router.put("/:id", verifyToken, validarCriarCaso, async (req, res) => {
  *         description: Caso deletado com sucesso
  *       400:
  *         description: ID inválido
+ *       401:
+ *         description: Token não fornecido ou inválido
  *       404:
  *         description: Caso não encontrado
  *       500:
@@ -291,17 +293,17 @@ router.put("/:id", verifyToken, validarCriarCaso, async (req, res) => {
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: "ID inválido" });
+      return res.status(400).json({ success: false, error: "ID inválido" });
     }
 
     const caso = await Caso.findByIdAndDelete(req.params.id);
     if (!caso) {
-      return res.status(404).json({ error: "Caso não encontrado" });
+      return res.status(404).json({ success: false, error: "Caso não encontrado" });
     }
     res.json({ message: "Caso deletado com sucesso" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao deletar caso" });
+    console.error("Erro ao deletar caso:", error.message);
+    res.status(500).json({ success: false, error: "Erro ao deletar caso", detalhes: error.message });
   }
 });
 
