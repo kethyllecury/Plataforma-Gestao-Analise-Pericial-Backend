@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const Usuario = require("../models/Usuario");
 const { verifyToken } = require("../middleware/auth");
 const { validarAdmin, validarLogin, validarRegistro } = require("../validators/autenticacaoValidator");
-const { verificarErrosValidacao, validarCPF } = require("../utils/validacao");
+const { verificarErrosValidacao} = require("../utils/validacao");
 
 const router = express.Router();
 
@@ -61,13 +61,13 @@ router.post('/registrar', validarRegistro, verificarErrosValidacao, validarAdmin
     if (!["assistente", "perito"].includes(cargo)) {
       return res
         .status(400)
-        .json({ message: "Cargo inválido! Escolha entre 'assistente' ou 'perito'." });
+        .json({ success: false, message: "Cargo inválido! Escolha entre 'assistente' ou 'perito'." });
     }
 
     if(!validarCPF(cpf)) {
       return res
         .status(400)
-        .json({ message: "CPF inválido!" });
+        .json({ success: false, message: "CPF inválido!" });
     }
 
     const senhaCriptografada = await bcrypt.hash(senha, 10);const express = require("express");
@@ -82,77 +82,6 @@ const router = express.Router();
 
 /**
  * @swagger
- * tags:
- *   name: Autenticação
- *   description: Endpoints para autenticação e gestão de usuários
- */
-
-/**
- * @swagger
- * /api/auth/registrar:
- *   post:
- *     summary: Registra um novo usuário (somente admin)
- *     tags: [Autenticação]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               cpf:
- *                 type: string
- *                 example: "12345678901"
- *               email:
- *                 type: string
- *                 example: "usuario@example.com"
- *               nome:
- *                 type: string
- *                 example: "João Silva"
- *               cargo:
- *                 type: string
- *                 enum: ["assistente", "perito"]
- *                 example: "perito"
- *               senha:
- *                 type: string
- *                 example: "123456"
- *     responses:
- *       201:
- *         description: Usuário registrado com sucesso
- *       400:
- *         description: Erro de validação ou cargo inválido
- *       403:
- *         description: Acesso restrito a administradores
- *       500:
- *         description: Erro interno do servidor
- */
-router.post('/registrar', verifyToken, validarAdmin, validarRegistro, verificarErrosValidacao, async (req, res) => {
-  const { cpf, email, nome, cargo, senha } = req.body;
-  try {
-    if (!["assistente", "perito"].includes(cargo)) {
-      return res
-        .status(400)
-        .json({ message: "Cargo inválido! Escolha entre 'assistente' ou 'perito'." });
-    }
-
-    if (!validarCPF(cpf)) {
-      return res
-        .status(400)
-        .json({ message: "CPF inválido!" });
-    }
-
-    const senhaCriptografada = await bcrypt.hash(senha, 10);
-    const usuario = await Usuario.create({ cpf, email, nome, cargo, senha: senhaCriptografada });
-    res.status(201).json(usuario);
-  } catch (error) {
-    res.status(400).json({ erro: 'Erro ao registrar usuário' });
-  }
-});
-
-/**
- * @swagger
  * /api/auth/login:
  *   post:
  *     summary: Autentica um usuário e retorna um token JWT
@@ -178,6 +107,8 @@ router.post('/registrar', verifyToken, validarAdmin, validarRegistro, verificarE
  *             schema:
  *               type: object
  *               properties:
+ *                 success: 
+ *                   type: boolean
  *                 token:
  *                   type: string
  *       401:
@@ -193,10 +124,10 @@ router.post('/login', validarLogin, verificarErrosValidacao, async (req, res) =>
       const token = jwt.sign({ id: usuario._id, cargo: usuario.cargo }, process.env.JWT_SECRET, { expiresIn: '2h' });
       res.json({ token });
     } else {
-      res.status(401).json({ erro: 'Credenciais inválidas' });
+      res.status(401).json({ success: false, erro: 'Credenciais inválidas' });
     }
   } catch (error) {
-    res.status(400).json({ erro: 'Erro ao fazer login' });
+    res.status(400).json({ success: false, erro: 'Erro ao fazer login' });
   }
 });
 
@@ -221,7 +152,7 @@ router.get("/usuarios", verifyToken, validarAdmin, async (req, res) => {
     const usuarios = await Usuario.find({}, "-senha"); // Exclui o campo senha da resposta
     res.json(usuarios);
   } catch (error) {
-    res.status(500).json({ message: "Erro ao buscar usuários", error });
+    res.status(500).json({ success: false, message: "Erro ao buscar usuários", error });
   }
 });
 
@@ -277,7 +208,7 @@ router.put("/usuarios/:id", verifyToken, validarAdmin, async (req, res) => {
     const { email, nome, cargo, dataNascimento } = req.body;
 
     if (cargo && !["assistente", "perito"].includes(cargo)) {
-      return res.status(400).json({ message: "Cargo inválido!" });
+      return res.status(400).json({ success: false, message: "Cargo inválido!" });
     }
 
     const user = await Usuario.findByIdAndUpdate(
@@ -286,11 +217,11 @@ router.put("/usuarios/:id", verifyToken, validarAdmin, async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    if (!user) return res.status(404).json({ message: "Usuário não encontrado!" });
+    if (!user) return res.status(404).json({ success: false, message: "Usuário não encontrado!" });
 
-    res.json({ message: "Usuário atualizado com sucesso!", user });
+    res.json({ success: true, message: "Usuário atualizado com sucesso!"});
   } catch (error) {
-    res.status(500).json({ message: "Erro ao atualizar usuário", error });
+    res.status(500).json({ success: false, message: "Erro ao atualizar usuário", error });
   }
 });
 
@@ -322,11 +253,11 @@ router.delete("/usuarios/:id", verifyToken, validarAdmin, async (req, res) => {
   try {
     const deletedUser = await Usuario.findByIdAndDelete(req.params.id);
 
-    if (!deletedUser) return res.status(404).json({ message: "Usuário não encontrado!" });
+    if (!deletedUser) return res.status(404).json({ success: false, message: "Usuário não encontrado!" });
 
-    res.json({ message: "Usuário excluído com sucesso!" });
+    res.json({ success: true, message: "Usuário excluído com sucesso!" });
   } catch (error) {
-    res.status(500).json({ message: "Erro ao excluir usuário", error });
+    res.status(500).json({ success: false, message: "Erro ao excluir usuário", error });
   }
 });
 
@@ -334,7 +265,7 @@ module.exports = router;
     const usuario = await Usuario.create({ cpf, email, nome, cargo, senha: senhaCriptografada });
     res.status(201).json(usuario);
   } catch (error) {
-    res.status(400).json({ erro: 'Erro ao registrar usuário' });
+    res.status(400).json({ success: false, erro: 'Erro ao registrar usuário' });
   }
 });
 
@@ -378,12 +309,12 @@ router.post('/login', validarLogin, verificarErrosValidacao, async (req, res) =>
     const usuario = await Usuario.findOne({ email });
     if (usuario && await bcrypt.compare(senha, usuario.senha)) {
       const token = jwt.sign({ id: usuario._id, cargo: usuario.cargo }, process.env.JWT_SECRET, { expiresIn: '2h' });
-      res.json({ token });
+      res.json({ success: true, token });
     } else {
-      res.status(401).json({ erro: 'Credenciais inválidas' });
+      res.status(401).json({ success: false, erro: 'Credenciais inválidas' });
     }
   } catch (error) {
-    res.status(400).json({ erro: 'Erro ao fazer login' });
+    res.status(400).json({ success: false, erro: 'Erro ao fazer login' });
   }
 });
 
@@ -404,9 +335,9 @@ router.post('/login', validarLogin, verificarErrosValidacao, async (req, res) =>
 router.get("/usuarios", verifyToken, validarAdmin, async (req, res) => {
   try {
     const usuarios = await Usuario.find({}, "-senha"); // Exclui o campo senha da resposta
-    res.json(usuarios);
+    res.json({success: true, usuarios});
   } catch (error) {
-    res.status(500).json({ message: "Erro ao buscar usuários", error });
+    res.status(500).json({ success: false, message: "Erro ao buscar usuários", error });
   }
 });
 
@@ -460,20 +391,20 @@ router.put("/usuarios/:id", verifyToken, validarAdmin, async (req, res) => {
     const { email, nome, cargo, dataNascimento } = req.body;
 
     if (cargo && !["assistente", "perito"].includes(cargo)) {
-      return res.status(400).json({ message: "Cargo inválido!" });
+      return res.status(400).json({ success: false, message: "Cargo inválido!" });
     }
 
-    const user = await Usuario.findByIdAndUpdate(
+    const usuario = await Usuario.findByIdAndUpdate(
       req.params.id,
       { email, nome, cargo, dataNascimento },
       { new: true, runValidators: true }
     );
 
-    if (!user) return res.status(404).json({ message: "Usuário não encontrado!" });
+    if (!usuario) return res.status(404).json({ success: false, message: "Usuário não encontrado!" });
 
-    res.json({ message: "Usuário atualizado com sucesso!", user });
+    res.json({ success: true, message: "Usuário atualizado com sucesso!"});
   } catch (error) {
-    res.status(500).json({ message: "Erro ao atualizar usuário", error });
+    res.status(500).json({ success: false, message: "Erro ao atualizar usuário", error });
   }
 });
 
@@ -503,11 +434,11 @@ router.delete("/usuarios/:id", verifyToken, validarAdmin, async (req, res) => {
   try {
     const deletedUser = await Usuario.findByIdAndDelete(req.params.id);
 
-    if (!deletedUser) return res.status(404).json({ message: "Usuário não encontrado!" });
+    if (!deletedUser) return res.status(404).json({ success: false, message: "Usuário não encontrado!" });
 
-    res.json({ message: "Usuário excluído com sucesso!" });
+    res.json({ success: true, message: "Usuário excluído com sucesso!" });
   } catch (error) {
-    res.status(500).json({ message: "Erro ao excluir usuário", error });
+    res.status(500).json({ success: false, message: "Erro ao excluir usuário", error });
   }
 });
 
