@@ -39,14 +39,23 @@ const validarCPF = (cpf) => {
     return true;
 }
 
-const validarData = (data) => {
+const dataValida = (data) => {
+    if(!data === null) return false;
+
+    return true;
+}
+
+const converterData = (data) => {
     console.log("Data recebida:", data);
     data = new Date(data);
+    
     console.log("Data convertida:", data);
-    if (isNaN(data)) {
-        return false;
+
+    if (!dataValida(data)) {
+        return null;
     }
+    return data;
 }
 
 
-module.exports = { verificarErrosValidacao, validarCPF, validarData };
+module.exports = { verificarErrosValidacao, validarCPF, converterData };
