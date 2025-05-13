@@ -5,7 +5,7 @@ const Caso = require("../models/Caso");
 const Usuario = require("../models/Usuario");
 const { validarCriarCaso } = require("../validators/casosValidator");
 const { verifyToken } = require("../middleware/auth");
-const { verificarErrosValidacao } = require("../utils/validacao"); // Importar o middleware
+const { verificarErrosValidacao, converterData } = require("../utils/validacao"); // Importar o middleware
 
 /**
  * @swagger
@@ -79,13 +79,13 @@ router.post("/", verifyToken, validarCriarCaso, verificarErrosValidacao, async (
       return res.status(400).json({ success: false, error: "Nome do caso já existe" });
     }
 
-    if (!validarData(req.body.data)) {
+    if (converterData(req.body.data) === null) {
       return res.status(400).json({ success: false, error: "Data inválida" });
     }
 
     const novoCaso = new Caso(req.body);
     await novoCaso.save();
-    res.status(201).json(novoCaso);
+    res.status(201).json({ success: true, novoCaso });
 
   } catch (error) {
     console.error("Erro ao criar caso:", error.message);
@@ -117,7 +117,7 @@ router.post("/", verifyToken, validarCriarCaso, verificarErrosValidacao, async (
 router.get("/", verifyToken, async (req, res) => {
   try {
     const casos = await Caso.find().populate("peritoResponsavel", "nome email");
-    res.json(casos);
+    res.json({ success: true, casos });
   } catch (error) {
     console.error("Erro ao listar casos:", error.message);
     res.status(500).json({ success: false, error: "Erro ao listar casos", detalhes: error.message });
