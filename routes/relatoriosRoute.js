@@ -77,10 +77,10 @@ router.post('/', verifyToken, validarGerarRelatorio, verificarErrosValidacao, as
             assinado: false,
         });
 
-        res.json(relatorio);
+        res.json({ success: true, relatorio });
     } catch (error) {
         console.error('Erro ao gerar relatório:', error);
-        res.status(500).json({ erro: 'Erro ao gerar relatório' });
+        res.status(500).json({ success: false, erro: 'Erro ao gerar relatório' });
     }
 });
 
@@ -123,7 +123,7 @@ router.put('/:id/assinar', verifyToken, validarAssinarRelatorio, verificarErrosV
     try {
         const relatorio = await Relatorio.findById(id);
         if (!relatorio) {
-            return res.status(404).json({ erro: 'Relatório não encontrado' });
+            return res.status(404).json({ success: false, erro: 'Relatório não encontrado' });
         }
 
         const pdfBuffer = await gerarPDF(relatorio.conteudo, assinatura);
@@ -136,10 +136,10 @@ router.put('/:id/assinar', verifyToken, validarAssinarRelatorio, verificarErrosV
         relatorio.assinado = true;
         await relatorio.save();
 
-        res.json(relatorio);
+        res.json({ success: true, relatorio });
     } catch (error) {
         console.error('Erro ao assinar relatório:', error);
-        res.status(500).json({ erro: 'Erro ao assinar relatório' });
+        res.status(500).json({ success: false, erro: 'Erro ao assinar relatório' });
     }
 });
 
@@ -176,7 +176,7 @@ router.get('/:arquivoId', verifyToken, async (req, res) => {
         const relatorio = await Relatorio.findOne({ arquivoId });
 
         if (!relatorio) {
-            return res.status(404).json({ erro: 'Relatório não encontrado' });
+            return res.status(404).json({ success: false, erro: 'Relatório não encontrado' });
         }
 
         res.set('Content-Type', 'application/pdf');
@@ -187,11 +187,11 @@ router.get('/:arquivoId', verifyToken, async (req, res) => {
 
         downloadStream.on('error', (err) => {
             console.error('Erro ao recuperar relatório:', err);
-            res.status(500).json({ erro: 'Erro ao recuperar relatório' });
+            res.status(500).json({ success: false, erro: 'Erro ao recuperar relatório' });
         });
     } catch (error) {
         console.error('Erro:', error);
-        res.status(500).json({ erro: 'Erro ao recuperar relatório' });
+        res.status(500).json({ success: false, erro: 'Erro ao recuperar relatório' });
     }
 });
 

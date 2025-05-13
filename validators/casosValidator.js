@@ -19,8 +19,12 @@ const validarCriarCaso = [
         'Coleta de DNA',
         ]).withMessage('Tipo de caso inválido'),
     body('peritoResponsavel')
-        .notEmpty().withMessage('Perito responsável é obrigatório'),
-    ];
+        .notEmpty().withMessage('Perito responsável é obrigatório')
+        .isMongoId().withMessage('Perito responsável deve ser um ID válido'), // Validação de ObjectId
+    body('data')
+        .optional()
+        .isISO8601().withMessage('Data deve estar no formato ISO 8601 (ex.: 2023-01-01)'),
+];
 
 const validarListarCasos = [
     query('status')

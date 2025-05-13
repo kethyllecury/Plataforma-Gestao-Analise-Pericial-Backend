@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator');
 const verificarErrosValidacao = (req, res, next) => {
     const erros = validationResult(req);
     if (!erros.isEmpty()) {
-        return res.status(400).json({ erros: erros.array() });
+        return res.status(400).json({ success: false, erros: erros.array() });
     }
     next();
 };
@@ -39,5 +39,23 @@ const validarCPF = (cpf) => {
     return true;
 }
 
+const dataValida = (data) => {
+    if(!data === null) return false;
 
-module.exports = { verificarErrosValidacao, validarCPF };
+    return true;
+}
+
+const converterData = (data) => {
+    console.log("Data recebida:", data);
+    data = new Date(data);
+    
+    console.log("Data convertida:", data);
+
+    if (!dataValida(data)) {
+        return null;
+    }
+    return data;
+}
+
+
+module.exports = { verificarErrosValidacao, validarCPF, converterData };
