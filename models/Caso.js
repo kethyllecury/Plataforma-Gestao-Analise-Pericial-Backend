@@ -17,7 +17,7 @@ const casoSchema = new mongoose.Schema({
     },
     peritoResponsavel: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // Referencia o modelo User
+        ref: "Usuario", // Referencia o modelo User
         required: true,
     },
     status: {
