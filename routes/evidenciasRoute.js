@@ -3,7 +3,7 @@ const multer = require('multer');
 const mongoose = require('mongoose');
 const Evidencia = require('../models/Evidencia');
 const { fazerUploadArquivoGridFS, inicializarGridFS, obterArquivoGridFS } = require('../utils/gridfs');
-const { validarUploadEvidencia, validarListarEvidencias } = require('../validators/evidenciasValidator');
+const { validarUploadEvidencia } = require('../validators/evidenciasValidator');
 const { verificarErrosValidacao } = require('../utils/validacao');
 const { verifyToken } = require('../middleware/auth');
 const router = express.Router();
@@ -107,7 +107,7 @@ router.post('/', verifyToken, upload.single('arquivo'), validarUploadEvidencia, 
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/', validarListarEvidencias, verificarErrosValidacao, async (req, res) => {
+router.get('/', verificarErrosValidacao, async (req, res) => {
     const { casoId } = req.query;
     try {
         const evidencias = await Evidencia.find({ casoId });

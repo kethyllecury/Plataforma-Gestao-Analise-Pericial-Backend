@@ -5,7 +5,27 @@ const Caso = require("../models/Caso");
 const Usuario = require("../models/Usuario");
 const { validarCriarCaso } = require("../validators/casosValidator");
 const { verifyToken } = require("../middleware/auth");
-const { verificarErrosValidacao, converterData } = require("../utils/validacao"); // Importar o middleware
+const { verificarErrosValidacao } = require("../utils/validacao");
+
+// Funções de validação de data
+const dataValida = (data) => {
+    if (!(data instanceof Date) || isNaN(data.getTime())) {
+        return false;
+    }
+    return true;
+};
+
+const converterData = (data) => {
+    console.log("Data recebida:", data);
+    const dataConvertida = new Date(data);
+    
+    console.log("Data convertida:", dataConvertida);
+
+    if (!dataValida(dataConvertida)) {
+        return null;
+    }
+    return dataConvertida;
+};
 
 /**
  * @swagger
@@ -45,10 +65,10 @@ const { verificarErrosValidacao, converterData } = require("../utils/validacao")
  *               peritoResponsavel:
  *                 type: string
  *                 example: "UsuarioId"
- *               data:
+ *               dataHora:
  *                 type: string
- *                 format: date
- *                 example: "2023-01-01"
+ *                 format: date-time
+ *                 example: "2023-01-01T14:30:00Z"
  *     responses:
  *       201:
  *         description: Caso criado com sucesso
@@ -79,11 +99,16 @@ router.post("/", verifyToken, validarCriarCaso, verificarErrosValidacao, async (
       return res.status(400).json({ success: false, error: "Nome do caso já existe" });
     }
 
-    if (converterData(req.body.data) === null) {
-      return res.status(400).json({ success: false, error: "Data inválida" });
+    // Validar e converter dataHora
+    const dataHora = converterData(req.body.dataHora);
+    if (dataHora === null) {
+      return res.status(400).json({ success: false, error: "Data e hora inválidas" });
     }
 
-    const novoCaso = new Caso(req.body);
+    const novoCaso = new Caso({
+      ...req.body,
+      dataHora
+    });
     await novoCaso.save();
     res.status(201).json({ success: true, novoCaso });
 
@@ -102,21 +127,59 @@ router.post("/", verifyToken, validarCriarCaso, verificarErrosValidacao, async (
  * @swagger
  * /api/casos:
  *   get:
- *     summary: Lista todos os casos
+ *     summary: Lista todos os casos com filtros opcionais
  *     tags: [Casos]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - name: status
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: ["Em andamento", "Finalizado", "Arquivado"]
+ *           example: "Em andamento"
+ *       - name: dataHora
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *           example: "2023-01-01T14:30:00Z"
+ *       - name: peritoResponsavel
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: "UsuarioId"
  *     responses:
  *       200:
  *         description: Lista de casos
+ *       400:
+ *         description: Parâmetros de consulta inválidos
  *       401:
  *         description: Token não fornecido ou inválido
  *       500:
  *         description: Erro interno do servidor
  */
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, verificarErrosValidacao, async (req, res) => {
   try {
-    const casos = await Caso.find().populate("peritoResponsavel", "nome email");
+    const { status, dataHora, peritoResponsavel } = req.query;
+    
+    // Construir filtro
+    const filtro = {};
+    if (status) filtro.status = status;
+    if (peritoResponsavel) filtro.peritoResponsavel = peritoResponsavel;
+    if (dataHora) {
+      const dataConvertida = converterData(dataHora);
+      if (dataConvertida === null) {
+        return res.status(400).json({ success: false, error: "Data e hora inválidas" });
+      }
+      // Filtrar por data exata (pode ajustar para intervalo se necessário)
+      filtro.dataHora = dataConvertida;
+    }
+
+    const casos = await Caso.find(filtro).populate("peritoResponsavel", "nome email");
     res.json({ success: true, casos });
   } catch (error) {
     console.error("Erro ao listar casos:", error.message);
@@ -307,6 +370,14 @@ router.get("/paginado/:pagina/:quantidade", verifyToken, async (req, res) => {
  *               peritoResponsavel:
  *                 type: string
  *                 example: "someUsuarioId"
+ *               dataHora:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2023-01-01T14:30:00Z"
+ *               status:
+ *                 type: string
+ *                 enum: ["Em andamento", "Finalizado", "Arquivado"]
+ *                 example: "Em andamento"
  *     responses:
  *       200:
  *         description: Caso atualizado com sucesso
@@ -347,6 +418,15 @@ router.put("/:id", verifyToken, validarCriarCaso, verificarErrosValidacao, async
       if (casoExistente) {
         return res.status(400).json({ success: false, error: "Nome do caso já existe" });
       }
+    }
+
+    // Validar e converter dataHora se fornecido
+    if (req.body.dataHora) {
+      const dataHora = converterData(req.body.dataHora);
+      if (dataHora === null) {
+        return res.status(400).json({ success: false, error: "Data e hora inválidas" });
+      }
+      req.body.dataHora = dataHora;
     }
 
     const casoAtualizado = await Caso.findByIdAndUpdate(

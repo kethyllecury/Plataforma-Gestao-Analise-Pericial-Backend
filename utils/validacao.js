@@ -40,22 +40,23 @@ const validarCPF = (cpf) => {
 }
 
 const dataValida = (data) => {
-    if(!data === null) return false;
-
+    if (!(data instanceof Date) || isNaN(data.getTime())) {
+        return false;
+    }
     return true;
-}
+};
 
 const converterData = (data) => {
     console.log("Data recebida:", data);
-    data = new Date(data);
+    const dataConvertida = new Date(data);
     
-    console.log("Data convertida:", data);
+    console.log("Data convertida:", dataConvertida);
 
-    if (!dataValida(data)) {
+    if (!dataValida(dataConvertida)) {
         return null;
     }
-    return data;
-}
+    return dataConvertida;
+};
 
 
 module.exports = { verificarErrosValidacao, validarCPF, converterData };
