@@ -215,7 +215,7 @@ router.get("/:id", verifyToken, async (req, res) => {
  *                     registros:
  *                       type: array
  *                       items:
- *                         $ref: '#/components/schemas/Caso'
+ *                         $ref: '#/models/Caso'
  *       400:
  *         description: Parâmetros de paginação inválidos
  *       401:
