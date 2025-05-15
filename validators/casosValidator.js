@@ -23,19 +23,7 @@ const validarCriarCaso = [
         .isMongoId().withMessage('Perito responsável deve ser um ID válido'), // Validação de ObjectId
     body('data')
         .optional()
-        .isISO8601().withMessage('Data deve estar no formato ISO 8601 (ex.: 2023-01-01)'),
+        .isISO8601().withMessage('Data e hora deve estar no formato ISO 8601 (ex.: 2023-01-01T00:00:00Z)'),
 ];
 
-const validarListarCasos = [
-    query('status')
-        .optional()
-        .isIn(['Em andamento', 'Finalizado', 'Arquivado']).withMessage('Status inválido'),
-    query('data')
-        .optional()
-        .isISO8601().withMessage('Data inválida'),
-    query('peritoResponsavel')
-        .optional()
-        .notEmpty().withMessage('ID do perito responsável não pode estar vazio'),
-];
-
-module.exports = { validarCriarCaso, validarListarCasos };
+module.exports = { validarCriarCaso };

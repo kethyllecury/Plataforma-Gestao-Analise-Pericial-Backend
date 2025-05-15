@@ -25,6 +25,10 @@ const casoSchema = new mongoose.Schema({
         enum: ["Em andamento", "Finalizado", "Arquivado"],
         default: "Em andamento", // Definindo como default pois não será solicitado no formulário, mas poderá ser alterado depois
     },
+    dataHora: {
+        type: Date,
+        required: true
+    },
     createdAt: { type: Date, default: Date.now },
 });
 

@@ -10,9 +10,4 @@ const validarUploadEvidencia = [
         .trim(),
 ];
 
-const validarListarEvidencias = [
-    query('casoId')
-        .notEmpty().withMessage('ID do caso é obrigatório'),
-];
-
-module.exports = { validarUploadEvidencia, validarListarEvidencias };
+module.exports = { validarUploadEvidencia };
