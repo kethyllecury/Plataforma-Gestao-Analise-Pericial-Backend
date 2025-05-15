@@ -172,6 +172,106 @@ router.get("/:id", verifyToken, async (req, res) => {
 
 /**
  * @swagger
+ * /api/casos/paginado/{pagina}/{quantidade}:
+ *   get:
+ *     summary: Lista casos de forma paginada
+ *     tags: [Casos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: pagina
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 1
+ *         description: Número da página
+ *       - name: quantidade
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 10
+ *         description: Quantidade de registros por página
+ *     responses:
+ *       200:
+ *         description: Lista de casos paginada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 resultado:
+ *                   type: object
+ *                   properties:
+ *                     totalRegistro:
+ *                       type: integer
+ *                       example: 50
+ *                     registros:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Caso'
+ *       400:
+ *         description: Parâmetros de paginação inválidos
+ *       401:
+ *         description: Token não fornecido ou inválido
+ *       404:
+ *         description: Nenhum caso encontrado na página solicitada
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.get("/paginado/:pagina/:quantidade", verifyToken, async (req, res) => {
+  try {
+    const pagina = parseInt(req.params.pagina);
+    const quantidade = parseInt(req.params.quantidade);
+
+    // Validação dos parâmetros
+    if (isNaN(pagina) || pagina < 1 || isNaN(quantidade) || quantidade < 1) {
+      return res.status(400).json({ success: false, error: "Página e quantidade devem ser números inteiros positivos" });
+    }
+
+    // Contar o total de registros
+    const totalRegistro = await Caso.countDocuments();
+
+    // Verificar se há registros disponíveis
+    if (totalRegistro === 0) {
+      return res.status(404).json({ success: false, error: "Nenhum caso encontrado" });
+    }
+
+    // Calcular o número de documentos a pular
+    const skip = (pagina - 1) * quantidade;
+
+    // Buscar os casos paginados
+    const registros = await Caso.find()
+      .populate("peritoResponsavel", "nome email")
+      .skip(skip)
+      .limit(quantidade);
+
+    // Verificar se há registros na página solicitada
+    if (registros.length === 0) {
+      return res.status(404).json({ success: false, error: `Nenhum caso encontrado na página ${pagina}` });
+    }
+
+    res.json({
+      success: true,
+      resultado: {
+        totalRegistro,
+        registros,
+      },
+    });
+  } catch (error) {
+    console.error("Erro ao listar casos paginados:", error.message);
+    res.status(500).json({ success: false, error: "Erro ao listar casos paginados", detalhes: error.message });
+  }
+});
+
+/**
+ * @swagger
  * /api/casos/{id}:
  *   put:
  *     summary: Atualiza um caso
