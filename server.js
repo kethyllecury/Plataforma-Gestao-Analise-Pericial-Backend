@@ -21,13 +21,16 @@ const autenticacaoRotas = require('./routes/autenticacaoRoute');
 const casosRotas = require('./routes/casosRoute');
 const evidenciasRotas = require('./routes/evidenciasRoute');
 const relatoriosRotas = require('./routes/relatoriosRoute');
-const peritos = require('./routes/peritos')
+const peritos = require('./routes/peritos');
+const dashboard = require('./routes/dashboard');
 
 app.use('/api/auth', autenticacaoRotas);
 app.use('/api/casos', casosRotas);
 app.use('/api/evidencias', evidenciasRotas);
 app.use('/api/relatorios', relatoriosRotas);
 app.use('/api/peritos', peritos);
+app.use("/api/dashboard", dashboard);
+
 
 // Configuração do Swagger
 const swaggerConfig = require('./swagger');
