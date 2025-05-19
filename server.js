@@ -21,7 +21,7 @@ const autenticacaoRotas = require('./routes/autenticacaoRoute');
 const casosRotas = require('./routes/casosRoute');
 const evidenciasRotas = require('./routes/evidenciasRoute');
 const relatoriosRotas = require('./routes/relatoriosRoute');
-const peritos = require('./routes/peritos');
+const peritos = require('./routes/peritosRoute');
 const vitimasRotas = require('./routes/vitimasRoute')
 const dashboard = require('./routes/dashboard');
 
