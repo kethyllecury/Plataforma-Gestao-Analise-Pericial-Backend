@@ -1,7 +1,9 @@
 // routes/peritos.js
 const express = require("express");
-const router = express.Router();
+
 const Usuario = require("../models/Usuario");
+
+const router = express.Router();
 
 // GET /api/peritos
 router.get("/", async (req, res) => {
@@ -10,7 +12,7 @@ router.get("/", async (req, res) => {
     res.json({ success: true, peritos });
   } catch (error) {
     console.error("Erro ao buscar peritos:", error.message);
-    res.status(500).json({ success: false, error: "Erro ao buscar peritos" });
+    res.status(500).json({ success: false, error: "Erro ao buscar peritos", detalhes: error.message  });
   }
 });
 
