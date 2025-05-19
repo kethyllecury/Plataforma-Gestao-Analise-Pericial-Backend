@@ -1,8 +1,10 @@
 const express = require("express");
-const router = express.Router();
+
 const Caso = require("../models/Caso");
 const Usuario = require("../models/Usuario");
 const { verifyToken } = require("../middleware/auth");
+
+const router = express.Router();
 
 // GET /api/dashboard/resumo
 router.get("/resumo", verifyToken, async (req, res) => {

@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
 const Usuario = require("../models/Usuario");
 const { verifyToken } = require("../middleware/auth");
 const { validarAdmin, validarLogin, validarRegistro } = require("../validators/autenticacaoValidator");
@@ -82,7 +83,7 @@ router.post('/registrar', verifyToken, validarAdmin, validarRegistro, verificarE
 
     res.status(201).json({success: true, usuario});
   } catch (error) {
-    res.status(400).json({ success: false, erro: 'Erro ao registrar usuário' });
+    res.status(400).json({ success: false, erro: 'Erro ao registrar usuário', detalhes: error.message  });
   }
 });
 
@@ -137,7 +138,7 @@ router.post('/login', validarLogin, verificarErrosValidacao, async (req, res) =>
       res.status(401).json({ success: false, erro: 'Credenciais inválidas' });
     }
   } catch (error) {
-    res.status(400).json({ success: false, erro: 'Erro ao fazer login' });
+    res.status(400).json({ success: false, erro: 'Erro ao fazer login', detalhes: error.message  });
   }
 });
 
@@ -162,7 +163,7 @@ router.get("/usuarios", verifyToken, validarAdmin, async (req, res) => {
     const usuarios = await Usuario.find({}, "-senha");
     res.json({success: true, usuarios});
   } catch (error) {
-    res.status(500).json({ success: false, message: "Erro ao buscar usuários", error });
+    res.status(500).json({ success: false, message: "Erro ao buscar usuários", detalhes: error.message  });
   }
 });
 
@@ -227,7 +228,7 @@ router.put("/usuarios/:id", verifyToken, validarAdmin, async (req, res) => {
 
     res.json({ success: true, message: "Usuário atualizado com sucesso!" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Erro ao atualizar usuário", error });
+    res.status(500).json({ success: false, message: "Erro ao atualizar usuário", detalhes: error.message  });
   }
 });
 
@@ -263,7 +264,7 @@ router.delete("/usuarios/:id", verifyToken, validarAdmin, async (req, res) => {
 
     res.json({ success: true, message: "Usuário excluído com sucesso!" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Erro ao excluir usuário", error });
+    res.status(500).json({ success: false, message: "Erro ao excluir usuário", detalhes: error.message  });
   }
 });
 
