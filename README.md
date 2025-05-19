@@ -1,7 +1,7 @@
 # GOP - Gestão Odontolegal Pericial - API
 
 ## Introdução
-Este projeto é uma API RESTful para o backend da **GOP - Gestão Odontolegal Pericial**, um sistema voltado para o gerenciamento de casos forenses odontológicos. A API permite que usuários (administradores, assistentes e peritos) gerenciem casos, evidências, relatórios e autenticação de usuários. O sistema suporta operações como criação, leitura, atualização e exclusão (CRUD) de casos, upload de evidências, geração e assinatura de relatórios, além de controle de acesso baseado em papéis.
+Este projeto é uma API RESTful para o backend da **GOP - Gestão Odontolegal Pericial**, um sistema voltado para o gerenciamento de casos forenses odontológicos. A API permite que usuários (administradores, assistentes e peritos) gerenciem casos, evidências, relatórios, vítimas e autenticação de usuários, além da visualização de um dashboard dinâmico. O sistema suporta operações como criação, leitura, atualização e exclusão (CRUD) de casos, upload de evidências, geração e assinatura de relatórios, além de controle de acesso baseado em papéis.
 
 O backend foi construído com Node.js, Express e MongoDB, utilizando JWT para autenticação, Mongoose para interações com o banco de dados, GridFS para armazenamento de arquivos e Swagger para documentação da API.
 
@@ -11,6 +11,7 @@ O backend é o núcleo da GOP - Gestão Odontolegal Pericial, possibilitando:
 - **Gerenciamento de Casos**: Criar, ler, atualizar e excluir casos forenses com detalhes como nome, local, descrição, tipo e status.
 - **Gerenciamento de Evidências**: Upload, listagem e recuperação de evidências (ex.: radiografias, odontogramas) associadas a casos.
 - **Geração de Relatórios**: Criação e assinatura de relatórios em PDF para os casos.
+- **Gerenciamento de Vítimas**: Criar, ler, atualizar e excluir vítimas com detalhes como, nome, idade e observações anatômicas.
 - **Acesso Baseado em Papéis**: Restringir ações (ex.: gerenciamento de usuários) a administradores.
 
 ## Tecnologias
@@ -21,7 +22,7 @@ O backend é o núcleo da GOP - Gestão Odontolegal Pericial, possibilitando:
 - **GridFS**: Para armazenamento e recuperação de arquivos (evidências e relatórios) no MongoDB.
 - **JWT (jsonwebtoken)**: Para autenticação e autorização de usuários.
 - **Bcrypt (bcryptjs)**: Para criptografar senhas de usuários.
-- **Express-validator**: Para validação de dados das requisições.
+- **Express-validator**: Para validação de dados das requisições.-
 - **CORS**: Para habilitar o compartilhamento de recursos entre origens diferentes.
 - **Dotenv**: Para gerenciar variáveis de ambiente.
 - **Multer**: Para upload de arquivos.
@@ -110,11 +111,15 @@ Siga os passos abaixo para configurar o projeto localmente:
   - `Evidencia.js`: Esquema para evidências.
   - `Relatorio.js`: Esquema para relatórios.
   - `Usuario.js`: Esquema para usuários.
+  - `Vitima.js`: Esquema para vítimas.
 - **`routes/`**:
   - `autenticacaoRoute.js`: Rotas para autenticação e gerenciamento de usuários.
   - `casosRoute.js`: Rotas para gerenciamento de casos.
+  - `dashboard.js`: Rotas para visualização da dashboard.
   - `evidenciasRoute.js`: Rotas para gerenciamento de evidências.
+  - `peritosRoute.js`: Rotas para gerenciamento de peritos.
   - `relatoriosRoute.js`: Rotas para geração e gerenciamento de relatórios.
+  - `vitimasRoute.js`: Rotas para gerenciamento de vítimas.
 - **`utils/`**:
   - `gridfs.js`: Funções para upload e recuperação de arquivos via GridFS.
   - `validacao.js`: Funções utilitárias para validação, como verificação de CPF.
@@ -123,10 +128,12 @@ Siga os passos abaixo para configurar o projeto localmente:
   - `casosValidator.js`: Validadores para criação e listagem de casos.
   - `evidenciasValidator.js`: Validadores para upload e listagem de evidências.
   - `relatoriosValidator.js`: Validadores para geração e assinatura de relatórios.
+  - `vitimasValidator.js`: Validadores para criação de vítimas.
 - **`server.js`**: Ponto de entrada principal para o servidor Express.
 - **`swagger.js`**: Configuração da documentação Swagger.
 - **`package.json`**: Dependências e scripts do projeto.
 - **`.env`**: Variáveis de ambiente (não versionado).
+- **`.gitignore`**: Oculta arquivos para o git.
 
 ## Rotas Disponíveis
 A documentação completa está disponível em `/api-docs`. Abaixo está um resumo das principais rotas:
@@ -146,8 +153,14 @@ A documentação completa está disponível em `/api-docs`. Abaixo está um resu
 | POST   | `/`          | Criar um novo caso     | Privado        |
 | GET    | `/`          | Listar todos os casos  | Privado        |
 | GET    | `/:id`       | Obter um caso por ID   | Privado        |
+| GET    | `/paginado/:pagina/:quantidade` | Listar casos paginado | Privado        |
 | PUT    | `/:id`       | Atualizar um caso      | Privado        |
 | DELETE | `/:id`       | Excluir um caso        | Privado        |
+
+### Rotas de Dashboard (`/api/dashboard`)
+| Método | Caminho      | Descrição              | Acesso         |
+|--------|--------------|------------------------|----------------|
+| GET    | `/resumo`    | Listar resumo de todo conteúdo  | Privado |
 
 ### Rotas de Evidências (`/api/evidencias`)
 | Método | Caminho         | Descrição                     | Acesso         |
@@ -156,12 +169,27 @@ A documentação completa está disponível em `/api-docs`. Abaixo está um resu
 | GET    | `/`             | Listar evidências por caso    | Privado        |
 | GET    | `/:arquivoId`   | Recuperar um arquivo de evidência | Privado    |
 
+### Rotas de Peritos (`/api/peritos`)
+| Método | Caminho      | Descrição              | Acesso         |
+|--------|--------------|------------------------|----------------|
+| GET    | `/`          | Listar todos os perítos  | Privado |
+
 ### Rotas de Relatórios (`/api/relatorios`)
 | Método | Caminho         | Descrição                     | Acesso         |
 |--------|-----------------|-------------------------------|----------------|
 | POST   | `/`             | Gerar um novo relatório       | Privado        |
 | PUT    | `/:id/assinar`  | Assinar um relatório          | Privado        |
 | GET    | `/:arquivoId`   | Recuperar um relatório em PDF | Privado        |
+
+### Rotas de Vítimas (`/api/vitimas`)
+| Método | Caminho      | Descrição              | Acesso         |
+|--------|--------------|------------------------|----------------|
+| POST   | `/`          | Criar uma nova vítima     | Privado     |
+| GET    | `/`          | Listar todas as vítimas   | Privado      |
+| GET    | `/:id`       | Obter uma vítima por ID   | Privado     |
+| GET    | `/paginado/:pagina/:quantidade` | Listar vítimas paginado | Privado        |
+| PUT    | `/:id`       | Atualizar uma vítima      | Privad      |
+| DELETE | `/:id`       | Excluir uma vítima        | Privado     |
 
 ## Banco de Dados
 O projeto utiliza MongoDB com Mongoose para definição de esquemas e GridFS para armazenamento de arquivos.
@@ -199,6 +227,18 @@ O projeto utiliza MongoDB com Mongoose para definição de esquemas e GridFS par
   - `nomeArquivo`: String, obrigatório
   - `assinatura`: String, opcional
   - `assinado`: Boolean, padrão: false
+  - `createdAt`: Date, padrão: data atual
+
+  - **Vítima** (`Vitima.js`):
+  - `casoId`: Referência a Caso (ObjectId), obrigatório
+  - `nome`: String, opcional (caso não identificado)
+  - `genero`: String, opcional (caso não identificado)
+  - `idade`: Number, opcional (caso não identificado)
+  - `cpf`: String, opcional (caso não identificado)
+  - `endereco`: String, opcional (caso não identificado)
+  - `etnia`: Enum ['Branca', 'Preta', 'Parda', 'Amarela', 'Indígena', 'Não identificado'], obrigatório
+  - `odontograma`: Object { superiorEsquerdo: String, opcional, superiorDireito: String, opcional, inferiorEsquerdo: String, opcional, inferiorDireito: String, opcional }
+  - `anotacaoAnatomia`: String, obrigatório
   - `createdAt`: Date, padrão: data atual
 
 ## Autenticação
