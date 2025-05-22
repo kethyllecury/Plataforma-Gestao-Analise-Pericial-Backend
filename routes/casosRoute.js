@@ -7,26 +7,6 @@ const { validarCriarCaso } = require("../validators/casosValidator");
 const { verifyToken } = require("../middleware/auth");
 const { verificarErrosValidacao } = require("../utils/validacao");
 
-// Funções de validação de data
-const dataValida = (data) => {
-    if (!(data instanceof Date) || isNaN(data.getTime())) {
-        return false;
-    }
-    return true;
-};
-
-const converterData = (data) => {
-    console.log("Data recebida:", data);
-    const dataConvertida = new Date(data);
-    
-    console.log("Data convertida:", dataConvertida);
-
-    if (!dataValida(dataConvertida)) {
-        return null;
-    }
-    return dataConvertida;
-};
-
 /**
  * @swagger
  * tags:
