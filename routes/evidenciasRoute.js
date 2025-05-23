@@ -1,11 +1,13 @@
 const express = require('express');
 const multer = require('multer');
 const mongoose = require('mongoose');
+
 const Evidencia = require('../models/Evidencia');
 const { fazerUploadArquivoGridFS, inicializarGridFS, obterArquivoGridFS } = require('../utils/gridfs');
 const { validarUploadEvidencia } = require('../validators/evidenciasValidator');
 const { verificarErrosValidacao } = require('../utils/validacao');
 const { verifyToken } = require('../middleware/auth');
+
 const router = express.Router();
 
 /**
@@ -82,7 +84,7 @@ router.post('/', verifyToken, upload.single('arquivo'), validarUploadEvidencia, 
         res.status(201).json(evidencia);
     } catch (error) {
         console.error({success: false, 'Erro ao salvar evidência:': error});
-        res.status(500).json({ success: false, erro: 'Erro ao fazer upload de evidência' });
+        res.status(500).json({ success: false, erro: 'Erro ao fazer upload de evidência', detalhes: error.message });
     }
 });
 

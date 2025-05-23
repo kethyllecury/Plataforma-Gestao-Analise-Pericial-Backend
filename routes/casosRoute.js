@@ -1,11 +1,13 @@
 const express = require("express");
-const router = express.Router();
 const mongoose = require("mongoose");
+
 const Caso = require("../models/Caso");
 const Usuario = require("../models/Usuario");
 const { validarCriarCaso } = require("../validators/casosValidator");
 const { verifyToken } = require("../middleware/auth");
 const { verificarErrosValidacao } = require("../utils/validacao");
+
+const router = express.Router();
 
 /**
  * @swagger
