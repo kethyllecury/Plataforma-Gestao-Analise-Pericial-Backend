@@ -39,7 +39,7 @@ router.get("/resumo", verifyToken, async (req, res) => {
       nome: caso.nome,
       tipo: caso.tipo,
       perito: caso.peritoResponsavel?.nome || "N/A",
-      data: caso.data,
+      data: caso.dataHora,
     }));
 
     // Casos por perito
