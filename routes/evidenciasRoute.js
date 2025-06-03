@@ -147,7 +147,7 @@ router.get('/', verificarErrosValidacao, async (req, res) => {
  *       500:
  *         description: Erro interno do servidor
  */
-router.get('/:arquivoId', verifyToken, async (req, res) => {
+router.get('/:arquivoId', async (req, res) => {
     try {
         const arquivoId = new mongoose.Types.ObjectId(req.params.arquivoId);
         const arquivo = await Evidencia.findOne({ arquivoId });
