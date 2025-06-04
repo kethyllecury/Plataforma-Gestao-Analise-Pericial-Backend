@@ -1,10 +1,34 @@
 const mongoose = require('mongoose');
 
+// Função para gerar NIC único de 8 dígitos
+const gerarNIC = async () => {
+    const gerarNumero = () => {
+        return Math.floor(10000000 + Math.random() * 90000000).toString(); // Gera número de 8 dígitos
+    };
+
+    let nic;
+    let isUnique = false;
+    while (!isUnique) {
+        nic = gerarNumero();
+        const existingVitima = await mongoose.model('Vitima').findOne({ NIC: nic });
+        if (!existingVitima) {
+            isUnique = true;
+        }
+    }
+    return nic;
+};
+
 const vitimaSchema = new mongoose.Schema({
     casoId: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Caso', 
         required: true 
+    },
+    NIC: {
+        type: String,
+        required: true,
+        unique: true,
+        default: gerarNIC // Gera NIC único automaticamente
     },
     nome: { type: String, default: "Não identificado" },
     genero: { type: String, default: "Não identificado" },

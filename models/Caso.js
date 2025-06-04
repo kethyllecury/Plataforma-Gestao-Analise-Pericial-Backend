@@ -30,6 +30,7 @@ const casoSchema = new mongoose.Schema({
         required: true
     },
     createdAt: { type: Date, default: Date.now },
+    dataFechamento: { type: Date }
 });
 
 module.exports = mongoose.model("Caso", casoSchema);
