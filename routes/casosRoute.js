@@ -5,7 +5,7 @@ const Caso = require("../models/Caso");
 const Usuario = require("../models/Usuario");
 const { validarCriarCaso } = require("../validators/casosValidator");
 const { verifyToken } = require("../middleware/auth");
-const { verificarErrosValidacao } = require("../utils/validacao");
+const { verificarErrosValidacao, converterData } = require("../utils/validacao");
 
 const router = express.Router();
 

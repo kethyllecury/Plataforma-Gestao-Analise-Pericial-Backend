@@ -47,11 +47,8 @@ const dataValida = (data) => {
 };
 
 const converterData = (data) => {
-    console.log("Data recebida:", data);
     const dataConvertida = new Date(data);
     
-    console.log("Data convertida:", dataConvertida);
-
     if (!dataValida(dataConvertida)) {
         return null;
     }

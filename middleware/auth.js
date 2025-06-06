@@ -14,7 +14,22 @@ const verifyToken = async (req, res, next) => {
 
     next();
   } catch (error) {
-    res.status(401).json({ success: false, message: "Token inválido!", error });
+    // MODIFICAÇÃO AQUI: Extraia name, message e, se for TokenExpiredError, expiredAt
+    const errorResponse = {
+      name: error.name,
+      message: error.message,
+    };
+    if (error.name === 'TokenExpiredError' && error.expiredAt) {
+      errorResponse.expiredAt = error.expiredAt;
+    }
+
+    // Log para depuração no console do servidor
+    console.error('JWT Verification Error:', error.name, error.message);
+    if (error.name === 'TokenExpiredError') {
+      console.error('Token expired at:', error.expiredAt);
+    }
+    
+    res.status(401).json({ success: false, message: "Token inválido!", error: errorResponse });
   }
 };
 
