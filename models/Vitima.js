@@ -8,9 +8,17 @@ const gerarNIC = async () => {
 
     let nic;
     let isUnique = false;
+    
+    // Obtenha o modelo 'Vitima' uma vez aqui.
+    // Isso garante que você está usando a referência correta ao modelo
+    // que já foi registrado no Mongoose no momento da execução.
+    const VitimaModel = mongoose.model('Vitima'); 
+
     while (!isUnique) {
         nic = gerarNumero();
-        const existingVitima = await mongoose.model('Vitima').findOne({ NIC: nic });
+        // Use a variável VitimaModel que você já obteve.
+        // Isso é mais limpo e evita buscar o modelo novamente para cada iteração.
+        const existingVitima = await VitimaModel.findOne({ NIC: nic }); 
         if (!existingVitima) {
             isUnique = true;
         }
@@ -26,9 +34,8 @@ const vitimaSchema = new mongoose.Schema({
     },
     NIC: {
         type: String,
-        required: true,
         unique: true,
-        default: gerarNIC // Gera NIC único automaticamente
+        // Removido 'default: gerarNIC' daqui, pois a geração é feita no hook 'pre('save')'
     },
     nome: { type: String, default: "Não identificado" },
     genero: { type: String, default: "Não identificado" },
@@ -48,6 +55,22 @@ const vitimaSchema = new mongoose.Schema({
     },
     anotacaoAnatomia: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
+});
+
+// Hook 'pre('save')' para gerar o NIC automaticamente para novos documentos
+vitimaSchema.pre('save', async function(next) {
+    // 'this' refere-se ao documento Vitima que está sendo salvo.
+    // Garante que o NIC só é gerado se for um novo documento e ainda não foi fornecido.
+    if (this.isNew && (!this.NIC || this.NIC === '')) {
+        try {
+            this.NIC = await gerarNIC(); // Aguarda a resolução da Promise de gerarNIC
+        } catch (error) {
+            console.error("Erro ao gerar NIC no pre-save hook:", error);
+            // Se houver um erro, passa para o próximo middleware de erro
+            return next(error); 
+        }
+    }
+    next(); // Continua o processo de salvamento do Mongoose
 });
 
 module.exports = mongoose.model('Vitima', vitimaSchema);
