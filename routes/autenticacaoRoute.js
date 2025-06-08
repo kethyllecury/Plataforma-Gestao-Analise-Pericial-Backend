@@ -131,7 +131,7 @@ router.post('/login', validarLogin, verificarErrosValidacao, async (req, res) =>
       const token = jwt.sign(
         { id: usuario._id, cargo: usuario.cargo },
         process.env.JWT_SECRET,
-        { expiresIn: '2h' }
+        { expiresIn: '3h' }
       );
 
       const { senha, ...usuarioSemsenha } = usuario._doc;
