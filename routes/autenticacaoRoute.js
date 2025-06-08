@@ -133,7 +133,9 @@ router.post('/login', validarLogin, verificarErrosValidacao, async (req, res) =>
         process.env.JWT_SECRET,
         { expiresIn: '2h' }
       );
-      res.json({ success: true, token });
+
+      const { senha, ...usuarioSemsenha } = usuario._doc;
+      res.json({ success: true, token, usuario: usuarioSemsenha });
     } else {
       res.status(401).json({ success: false, erro: 'Credenciais inválidas' });
     }
