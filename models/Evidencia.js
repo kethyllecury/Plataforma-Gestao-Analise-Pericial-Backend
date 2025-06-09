@@ -6,6 +6,7 @@ const evidenciaSchema = new mongoose.Schema({
         ref: 'Caso', 
         required: true 
     },
+    tituloEvidencia: {type: String, required: true},
     arquivoId: { type: mongoose.Schema.Types.ObjectId, required: true }, // ID do arquivo no GridFS
     nomeArquivo: { type: String, required: true }, // Nome original do arquivo
     tipoArquivo: { type: String, required: true }, // MIME type (ex.: image/jpeg, application/pdf)
