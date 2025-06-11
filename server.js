@@ -21,7 +21,8 @@ const autenticacaoRotas = require('./routes/autenticacaoRoute');
 const casosRotas = require('./routes/casosRoute');
 const evidenciasRotas = require('./routes/evidenciasRoute');
 const relatoriosRotas = require('./routes/relatoriosRoute');
-const peritos = require('./routes/peritosRoute');
+const laudosRotas = require('./routes/laudosRoute');
+const peritosRotas = require('./routes/peritosRoute');
 const vitimasRotas = require('./routes/vitimasRoute')
 const dashboard = require('./routes/dashboard');
 
@@ -29,7 +30,8 @@ app.use('/api/auth', autenticacaoRotas);
 app.use('/api/casos', casosRotas);
 app.use('/api/evidencias', evidenciasRotas);
 app.use('/api/relatorios', relatoriosRotas);
-app.use('/api/peritos', peritos);
+app.use('/api/laudos', laudosRotas);
+app.use('/api/peritos', peritosRotas);
 app.use("/api/vitimas", vitimasRotas)
 app.use("/api/dashboard", dashboard);
 
