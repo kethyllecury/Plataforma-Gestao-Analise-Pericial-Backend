@@ -2,7 +2,6 @@ const express = require('express');
 const PDFDocument = require('pdfkit');
 const mongoose = require('mongoose');
 const axios = require('axios');
-const pLimit = require('p-limit');
 
 const Laudo = require('../models/Laudo');
 const Evidencia = require('../models/Evidencia');
@@ -14,7 +13,6 @@ const { verificarErrosValidacao } = require('../utils/validacao');
 const { verifyToken } = require('../middleware/auth');
 
 const router = express.Router();
-const limit = pLimit(2); // Limita a 2 requisições simultâneas
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
@@ -27,7 +25,7 @@ const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/
  */
 
 /**
- * Gera conteúdo do laudo usando a API Gemini com retry e limite
+ * Gera conteúdo do laudo usando a API Gemini com retry
  * @param {Object} evidencia - Dados da evidência
  * @param {Object} caso - Dados do caso associado
  * @param {number} [retries=3] - Número de tentativas
@@ -35,56 +33,54 @@ const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/
  * @returns {Promise<string>} - Conteúdo gerado
  */
 const gerarConteudoLaudoGemini = async (evidencia, caso, retries = 3, delay = 1000) => {
-    return limit(async () => {
-        let prompt = `Gere um laudo pericial técnico e detalhado para a seguinte evidência criminal, com foco em análise odonto-pericial, considerando o contexto do caso associado:\n\n`;
-        prompt += `Contexto do Caso:\n`;
-        prompt += `ID do Caso: ${caso._id}\n`;
-        prompt += `Nome: ${caso.nome}\n`;
-        prompt += `Tipo: ${caso.tipo}\n`;
-        prompt += `Local: ${caso.local}\n`;
-        prompt += `Descrição: ${caso.descricao}\n\n`;
+    let prompt = `Gere um laudo pericial técnico e detalhado para a seguinte evidência criminal, com foco em análise odonto-pericial, considerando o contexto do caso associado:\n\n`;
+    prompt += `Contexto do Caso:\n`;
+    prompt += `ID do Caso: ${caso._id}\n`;
+    prompt += `Nome: ${caso.nome}\n`;
+    prompt += `Tipo: ${caso.tipo}\n`;
+    prompt += `Local: ${caso.local}\n`;
+    prompt += `Descrição: ${caso.descricao}\n\n`;
 
-        prompt += `Detalhes da Evidência:\n`;
-        prompt += `ID da Evidência: ${evidencia._id}\n`;
-        prompt += `Título: ${evidencia.tituloEvidencia}\n`;
-        prompt += `Tipo: ${evidencia.tipoEvidencia}\n`;
-        prompt += `Descrição: ${evidencia.descricao || 'N/A'}\n`;
-        prompt += `Coletado Por: ${evidencia.coletadoPor.nome}\n`;
-        prompt += `Data de Criação: ${evidencia.createdAt.toLocaleString('pt-BR')}\n`;
-        prompt += `Nome do Arquivo: ${evidencia.nomeArquivo}\n`;
-        prompt += `Tipo do Arquivo: ${evidencia.tipoArquivo}\n\n`;
+    prompt += `Detalhes da Evidência:\n`;
+    prompt += `ID da Evidência: ${evidencia._id}\n`;
+    prompt += `Título: ${evidencia.tituloEvidencia}\n`;
+    prompt += `Tipo: ${evidencia.tipoEvidencia}\n`;
+    prompt += `Descrição: ${evidencia.descricao || 'N/A'}\n`;
+    prompt += `Coletado Por: ${evidencia.coletadoPor}\n`;
+    prompt += `Data de Criação: ${evidencia.createdAt.toLocaleString('pt-BR')}\n`;
+    prompt += `Nome do Arquivo: ${evidencia.nomeArquivo}\n`;
+    prompt += `Tipo do Arquivo: ${evidencia.tipoArquivo}\n\n`;
 
-        prompt += `Com base nessas informações, analise a evidência (especialmente se for radiografia ou odontograma) no contexto do caso e forneça uma avaliação técnica detalhada, incluindo possíveis implicações forenses e recomendações para investigações adicionais. O laudo deve ser conciso, objetivo e baseado estritamente nos dados fornecidos.`;
+    prompt += `Com base nessas informações, analise a evidência (especialmente se for radiografia ou odontograma) no contexto do caso e forneça uma avaliação técnica detalhada, incluindo possíveis implicações forenses e recomendações para investigações adicionais. O laudo deve ser conciso, objetivo e baseado estritamente nos dados fornecidos.`;
 
-        for (let attempt = 1; attempt <= retries; attempt++) {
-            try {
-                const response = await axios.post(GEMINI_API_URL, {
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        topK: 1,
-                        topP: 1,
-                        maxOutputTokens: 2048,
-                    },
-                });
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await axios.post(GEMINI_API_URL, {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 1,
+                    topP: 1,
+                    maxOutputTokens: 2048,
+                },
+            });
 
-                if (response.data.candidates && response.data.candidates[0].content && response.data.candidates[0].content.parts) {
-                    return response.data.candidates[0].content.parts[0].text;
-                } else {
-                    throw new Error('Resposta da API Gemini não contém o conteúdo esperado.');
-                }
-            } catch (error) {
-                if (error.response && error.response.status === 429 && attempt < retries) {
-                    console.warn(`Erro 429 na tentativa ${attempt}. Aguardando ${delay}ms antes de tentar novamente.`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2; // Backoff exponencial
-                } else {
-                    console.error('Erro ao chamar Gemini API:', error.message);
-                    throw new Error(`Falha ao gerar conteúdo do laudo: ${error.message}`);
-                }
+            if (response.data.candidates && response.data.candidates[0].content && response.data.candidates[0].content.parts) {
+                return response.data.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error('Resposta da API Gemini não contém o conteúdo esperado.');
+            }
+        } catch (error) {
+            if (error.response && error.response.status === 429 && attempt < retries) {
+                console.warn(`Erro 429 na tentativa ${attempt}. Aguardando ${delay}ms antes de tentar novamente.`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; // Backoff exponencial
+            } else {
+                console.error('Erro ao chamar Gemini API:', error.message);
+                throw new Error(`Falha ao gerar conteúdo do laudo: ${error.message}`);
             }
         }
-    });
+    }
 };
 
 /**
@@ -118,13 +114,13 @@ const gerarPDF = async (titulo, evidencia, conteudo, assinatura = null) => {
             .text(`Título: ${evidencia.tituloEvidencia}`)
             .text(`Tipo: ${evidencia.tipoEvidencia}`)
             .text(`Descrição: ${evidencia.descricao || 'N/A'}`)
-            .text(`Coletado Por: ${evidencia.coletadoPor.nome}`)
+            .text(`Coletado Por: ${evidencia.coletadoPor}`)
             .text(`Data de Criação: ${evidencia.createdAt.toLocaleString('pt-BR')}`)
             .text(`Nome do Arquivo: ${evidencia.nomeArquivo}`)
             .text(`Tipo do Arquivo: ${evidencia.tipoArquivo}`);
         doc.moveDown(2);
 
-        // Seção: Imagem da Evidência (se for imagem)
+        //// Seção: Imagem da Evidência (se for imagem)
         if (['image/jpeg', 'image/png'].includes(evidencia.tipoArquivo)) {
             const downloadStream = obterArquivoGridFS(evidencia.arquivoId);
             let imageBuffer = Buffer.alloc(0);
@@ -256,7 +252,7 @@ router.post('/', verifyToken, verificarErrosValidacao, async (req, res) => {
                        `Título: ${evidencia.tituloEvidencia}\n` +
                        `Tipo: ${evidencia.tipoEvidencia}\n` +
                        `Descrição: ${evidencia.descricao || 'N/A'}\n` +
-                       `Coletado Por: ${evidencia.coletadoPor.nome}\n` +
+                       `Coletado Por: ${evidencia.coletadoPor}\n` +
                        `Recomenda-se análise manual pelo perito responsável.`;
         }
 
@@ -373,7 +369,7 @@ router.post('/:id/assinar', verifyToken, verificarErrosValidacao, async (req, re
                        `Título: ${evidencia.tituloEvidencia}\n` +
                        `Tipo: ${evidencia.tipoEvidencia}\n` +
                        `Descrição: ${evidencia.descricao || 'N/A'}\n` +
-                       `Coletado Por: ${evidencia.coletadoPor.nome}\n` +
+                       `Coletado Por: ${evidencia.coletadoPor}\n` +
                        `Recomenda-se análise manual pelo perito responsável.`;
         }
 
