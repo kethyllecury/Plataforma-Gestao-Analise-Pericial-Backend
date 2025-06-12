@@ -65,6 +65,7 @@ const gerarConteudoRelatorioGemini = async (caso, evidencias, vitimas, retries =
             prompt += `  Descrição: ${ev.descricao || 'N/A'}\n`;
             prompt += `  Coletado Por: ${ev.coletadoPor?.nome || 'N/A'}\n`;
             prompt += `  Data de Criação: ${ev.createdAt ? ev.createdAt.toLocaleString('pt-BR') : 'N/A'}\n`;
+            prompt += `  Localização: ${ev.localizacao && ev.localizacao.coordinates ? `[${ev.localizacao.coordinates.join(', ')}]` : 'N/A'}\n`;
         });
     }
     prompt += `\n`;
@@ -136,7 +137,7 @@ const gerarConteudoRelatorioGemini = async (caso, evidencias, vitimas, retries =
  * @returns {Promise<Buffer>} - Buffer do PDF gerado
  */
 const gerarPDF = async (titulo, caso, evidencias, vitimas, conteudo, assinatura = null) => {
-    return new Promise ( async (resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const doc = new PDFDocument({ margin: 50 });
         const buffers = [];
 
@@ -186,6 +187,7 @@ const gerarPDF = async (titulo, caso, evidencias, vitimas, conteudo, assinatura 
                     .text(`  Descrição: ${ev.descricao || 'N/A'}`)
                     .text(`  Coletado Por: ${ev.coletadoPor?.nome || 'N/A'}`)
                     .text(`  Data de Criação: ${ev.createdAt ? ev.createdAt.toLocaleString('pt-BR') : 'N/A'}`)
+                    .text(`  Localização: ${ev.localizacao && ev.localizacao.coordinates ? `[${ev.localizacao.coordinates.join(', ')}]` : 'N/A'}`)
                     .moveDown();
             });
         }
