@@ -23,7 +23,7 @@ O backend da GOP tem como objetivo:
 - **GridFS**: Para armazenamento e recuperação de arquivos (evidências e relatórios) no MongoDB.
 - **JWT (jsonwebtoken)**: Para autenticação e autorização de usuários.
 - **Bcrypt (bcryptjs)**: Para criptografar senhas de usuários.
-- **Express-validator**: Para validação de dados das requisições.-
+- **Express-validator**: Para validação de dados das requisições.
 - **CORS**: Para habilitar o compartilhamento de recursos entre origens diferentes.
 - **Dotenv**: Para gerenciar variáveis de ambiente.
 - **Multer**: Para upload de arquivos.
@@ -50,11 +50,12 @@ Siga os passos abaixo para configurar o projeto localmente:
    MONGODB_URI=<sua-string-de-conexão-mongodb>
    PORT=5000
    JWT_SECRET=<sua-chave-secreta-jwt>
+   GEMINI_API_KEY=<sua-chave-api-gemini>
    ```
    - `MONGODB_URI`: String de conexão com o MongoDB (ex.: `mongodb://localhost/gestao-forense`).
    - `PORT`: Porta onde o servidor será executado (padrão: 5000).
    - `JWT_SECRET`: Chave secreta para geração de tokens JWT (ex.: uma string aleatória segura).
-   -`GEMINI_API_KEY`: Chave da API Gemini para auxiliar na geração de laudos e relatórios.
+   - `GEMINI_API_KEY`: Chave da API Gemini para auxiliar na geração de laudos e relatórios.
 
 4. **Inicie o servidor**:
    ```bash
@@ -198,10 +199,10 @@ A documentação completa está disponível em `/api-docs`. Abaixo está um resu
 | Método | Caminho         | Descrição                     | Acesso  |
 |--------|-----------------|-------------------------------|---------|
 | POST   | `/`             | Criar novo laudo              | Privado |
-| GET    | `/`             | Listar laudos por caso        | Privado |
+| GET    | `/`             | Listar laudos por evidência   | Privado |
 | GET    | `/:id`          | Obter laudo por ID            | Privado |
-| PUT    | `/:id/assinar`  | Assinar laudo                 | Privado |
-| GET    | `/pdf/:arquivoId` | Baixar laudo em PDF         | Privado |
+| POST   | `/:id/assinar`  | Assinar laudo                 | Privado |
+| GET    | `/:arquivoId`   | Baixar laudo em PDF           | Privado |
 
 ### Rotas de Peritos (`/api/peritos`)
 | Método | Caminho      | Descrição                     | Acesso  |
@@ -212,7 +213,9 @@ A documentação completa está disponível em `/api-docs`. Abaixo está um resu
 | Método | Caminho         | Descrição                     | Acesso  |
 |--------|-----------------|-------------------------------|---------|
 | POST   | `/`             | Criar novo relatório          | Privado |
-| PUT    | `/:id/assinar`  | Assinar relatório             | Privado |
+| GET    | `/`             | Listar relatórios por caso    | Privado |
+| GET    | `/:id`          | Obter relatório por ID        | Privado |
+| POST   | `/:id/assinar`  | Assinar relatório             | Privado |
 | GET    | `/:arquivoId`   | Baixar relatório em PDF       | Privado |
 
 ### Rotas de Vítimas (`/api/vitimas`)
@@ -363,9 +366,9 @@ Os esquemas abaixo definem a estrutura dos dados no MongoDB e são documentados 
 
 ## Autenticação
 A API utiliza **JWT** para autenticação:
-- **Login**: Usuários se autenticam via `/api/auth/login` para receber um token JWT.
+- **Login**: Os usuários se autenticam por meio de `/api/auth/login` para receber um token JWT.
 - **Rotas Protegidas**: Todas as rotas, exceto `/api/auth/login`, requerem um token JWT no cabeçalho `Authorization`.
-- **Acesso por Papel**: Rotas administrativas (ex.: `/api/auth/registrar`) são restritas a usuários com `cargo: "admin"` via middleware `validarAdmin`.
+- **Acesso por Papel**: As rotas administrativas (ex.: `/api/auth/registrar`) são restritas a usuários com `cargo: "admin"` por meio do middleware `validarAdmin`.
 
 ## Documentação Swagger
 A API é documentada com **Swagger**, acessível em `/api-docs`. A documentação inclui:
