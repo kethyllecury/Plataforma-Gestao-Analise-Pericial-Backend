@@ -20,6 +20,17 @@ const evidenciaSchema = new mongoose.Schema({
         required: true 
     },
     descricao: { type: String },
+    localizacao: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // Array de [longitude, latitude]
+            required: false
+        }
+    },
     coletadoPor: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Usuario', 

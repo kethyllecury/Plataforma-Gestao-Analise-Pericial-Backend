@@ -58,6 +58,18 @@ const upload = multer({
  *               descricao:
  *                 type: string
  *                 example: "Descrição da evidência"
+ *               localizacao:
+ *                 type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: ["Point"]
+ *                     default: "Point"
+ *                   coordinates:
+ *                     type: array
+ *                     items:
+ *                       type: number
+ *                     example: [-46.6333, -23.5505]
  *     responses:
  *       201:
  *         description: Evidência criada com sucesso
@@ -67,7 +79,7 @@ const upload = multer({
  *         description: Erro interno do servidor
  */
 router.post('/', verifyToken, upload.single('arquivo'), validarUploadEvidencia, verificarErrosValidacao, async (req, res) => {
-    const { casoId, tituloEvidencia, tipoEvidencia, descricao } = req.body;
+    const { casoId, tituloEvidencia, tipoEvidencia, descricao, localizacao } = req.body;
     const arquivo = req.file;
 
     if (!arquivo) {
@@ -84,7 +96,8 @@ router.post('/', verifyToken, upload.single('arquivo'), validarUploadEvidencia, 
             tipoArquivo: arquivo.mimetype,
             tipoEvidencia,
             descricao,
-            coletadoPor: req.usuario._id, // Preenchido com o ID do usuário autenticado
+            localizacao: localizacao ? JSON.parse(localizacao) : undefined, // Parse do JSON se localizacao for fornecida
+            coletadoPor: req.usuario._id,
         });
         res.status(201).json({ success: true, evidencia });
     } catch (error) {
@@ -228,6 +241,18 @@ router.get('/arquivo/:arquivoId', verifyToken, async (req, res) => {
  *                       enum: ["radiografia", "odontograma", "outro"]
  *                     descricao:
  *                       type: string
+ *                     localizacao:
+ *                       type: object
+ *                       properties:
+ *                         type:
+ *                           type: string
+ *                           enum: ["Point"]
+ *                           default: "Point"
+ *                         coordinates:
+ *                           type: array
+ *                           items:
+ *                             type: number
+ *                           example: [-46.6333, -23.5505]
  *                     coletadoPor:
  *                       type: string
  *                     createdAt:
@@ -289,6 +314,18 @@ router.get('/:evidenciaId', verifyToken, async (req, res) => {
  *               descricao:
  *                 type: string
  *                 example: "Nova descrição da evidência"
+ *               localizacao:
+ *                 type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: ["Point"]
+ *                     default: "Point"
+ *                   coordinates:
+ *                     type: array
+ *                     items:
+ *                       type: number
+ *                     example: [-46.6333, -23.5505]
  *     responses:
  *       200:
  *         description: Evidência atualizada com sucesso
@@ -303,7 +340,7 @@ router.get('/:evidenciaId', verifyToken, async (req, res) => {
  */
 router.put('/:evidenciaId', verifyToken, upload.single('arquivo'), validarUploadEvidencia, verificarErrosValidacao, async (req, res) => {
     const { evidenciaId } = req.params;
-    const { tituloEvidencia, tipoEvidencia, descricao } = req.body;
+    const { tituloEvidencia, tipoEvidencia, descricao, localizacao } = req.body;
     const arquivo = req.file;
 
     try {
@@ -315,7 +352,8 @@ router.put('/:evidenciaId', verifyToken, upload.single('arquivo'), validarUpload
         evidencia.tituloEvidencia = tituloEvidencia || evidencia.tituloEvidencia;
         evidencia.tipoEvidencia = tipoEvidencia || evidencia.tipoEvidencia;
         evidencia.descricao = descricao || evidencia.descricao;
-        evidencia.coletadoPor = req.usuario._id; // Atualiza o coletadoPor com o usuário autenticado
+        evidencia.localizacao = localizacao ? JSON.parse(localizacao) : evidencia.localizacao;
+        evidencia.coletadoPor = req.usuario._id;
 
         if (arquivo) {
             await gfs.delete(new mongoose.Types.ObjectId(evidencia.arquivoId));
@@ -378,5 +416,61 @@ router.delete('/:evidenciaId', verifyToken, async (req, res) => {
         res.status(500).json({ success: false, erro: 'Erro ao deletar evidência', detalhes: error.message });
     }
 });
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Evidencia:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: ID da evidência
+ *         casoId:
+ *           type: string
+ *           description: ID do caso associado
+ *         tituloEvidencia:
+ *           type: string
+ *           description: Título da evidência
+ *         arquivoId:
+ *           type: string
+ *           description: ID do arquivo no GridFS
+ *         nomeArquivo:
+ *           type: string
+ *           description: Nome do arquivo
+ *         tipoArquivo:
+ *           type: string
+ *           description: Tipo MIME do arquivo
+ *         tipoEvidencia:
+ *           type: string
+ *           enum: ["radiografia", "odontograma", "outro"]
+ *           description: Tipo da evidência
+ *         descricao:
+ *           type: string
+ *           nullable: true
+ *           description: Descrição da evidência
+ *         localizacao:
+ *           type: object
+ *           properties:
+ *             type:
+ *               type: string
+ *               enum: ["Point"]
+ *               default: "Point"
+ *             coordinates:
+ *               type: array
+ *               items:
+ *                 type: number
+ *               description: Coordenadas [longitude, latitude]
+ *           nullable: true
+ *           description: Localização da evidência
+ *         coletadoPor:
+ *           type: string
+ *           description: ID do usuário que coletou a evidência
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Data de criação da evidência
+ */
 
 module.exports = router;

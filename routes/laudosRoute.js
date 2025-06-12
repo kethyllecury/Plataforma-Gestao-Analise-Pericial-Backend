@@ -49,7 +49,8 @@ const gerarConteudoLaudoGemini = async (evidencia, caso, retries = 3, delay = 10
     prompt += `Coletado Por: ${evidencia.coletadoPor}\n`;
     prompt += `Data de Criação: ${evidencia.createdAt.toLocaleString('pt-BR')}\n`;
     prompt += `Nome do Arquivo: ${evidencia.nomeArquivo}\n`;
-    prompt += `Tipo do Arquivo: ${evidencia.tipoArquivo}\n\n`;
+    prompt += `Tipo do Arquivo: ${evidencia.tipoArquivo}\n`;
+    prompt += `Localização: ${evidencia.localizacao && evidencia.localizacao.coordinates ? `[${evidencia.localizacao.coordinates.join(', ')}]` : 'N/A'}\n\n`;
 
     prompt += `Com base nessas informações, analise a evidência (especialmente se for radiografia ou odontograma) no contexto do caso e forneça uma avaliação técnica detalhada, incluindo possíveis implicações forenses e recomendações para investigações adicionais. O laudo deve ser conciso, objetivo e baseado estritamente nos dados fornecidos.`;
 
@@ -117,10 +118,11 @@ const gerarPDF = async (titulo, evidencia, conteudo, assinatura = null) => {
             .text(`Coletado Por: ${evidencia.coletadoPor}`)
             .text(`Data de Criação: ${evidencia.createdAt.toLocaleString('pt-BR')}`)
             .text(`Nome do Arquivo: ${evidencia.nomeArquivo}`)
-            .text(`Tipo do Arquivo: ${evidencia.tipoArquivo}`);
+            .text(`Tipo do Arquivo: ${evidencia.tipoArquivo}`)
+            .text(`Localização: ${evidencia.localizacao && evidencia.localizacao.coordinates ? `[${evidencia.localizacao.coordinates.join(', ')}]` : 'N/A'}`);
         doc.moveDown(2);
 
-        //// Seção: Imagem da Evidência (se for imagem)
+        // Sessão: Imagem da Evidência (se for imagem)
         if (['image/jpeg', 'image/png'].includes(evidencia.tipoArquivo)) {
             const downloadStream = obterArquivoGridFS(evidencia.arquivoId);
             let imageBuffer = Buffer.alloc(0);
@@ -253,6 +255,7 @@ router.post('/', verifyToken, verificarErrosValidacao, async (req, res) => {
                        `Tipo: ${evidencia.tipoEvidencia}\n` +
                        `Descrição: ${evidencia.descricao || 'N/A'}\n` +
                        `Coletado Por: ${evidencia.coletadoPor}\n` +
+                       `Localização: ${evidencia.localizacao && evidencia.localizacao.coordinates ? `[${evidencia.localizacao.coordinates.join(', ')}]` : 'N/A'}\n` +
                        `Recomenda-se análise manual pelo perito responsável.`;
         }
 
@@ -370,6 +373,7 @@ router.post('/:id/assinar', verifyToken, verificarErrosValidacao, async (req, re
                        `Tipo: ${evidencia.tipoEvidencia}\n` +
                        `Descrição: ${evidencia.descricao || 'N/A'}\n` +
                        `Coletado Por: ${evidencia.coletadoPor}\n` +
+                       `Localização: ${evidencia.localizacao && evidencia.localizacao.coordinates ? `[${evidencia.localizacao.coordinates.join(', ')}]` : 'N/A'}\n` +
                        `Recomenda-se análise manual pelo perito responsável.`;
         }
 
