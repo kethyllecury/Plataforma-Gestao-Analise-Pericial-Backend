@@ -180,6 +180,106 @@ const gerarPDF = async (titulo, evidencia, conteudo, assinatura = null) => {
 /**
  * @swagger
  * /api/laudos:
+ *   get:
+ *     summary: Lista todos os laudos com filtro opcional por evidenciaId
+ *     tags: [Laudos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: evidenciaId
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: ID da evidência para filtrar os laudos
+ *     responses:
+ *       200:
+ *         description: Lista de laudos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 laudos:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Laudo'
+ *       401:
+ *         description: Token não fornecido ou inválido
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.get('/', verifyToken, async (req, res) => {
+    try {
+        const { evidenciaId } = req.query;
+        const filtro = {};
+        if (evidenciaId && mongoose.Types.ObjectId.isValid(evidenciaId)) {
+            filtro.evidenciaId = evidenciaId;
+        }
+        const laudos = await Laudo.find(filtro).populate('peritoResponsavel', 'nome');
+        res.json({ success: true, laudos });
+    } catch (error) {
+        console.error('Erro ao listar laudos:', error);
+        res.status(500).json({ success: false, erro: 'Erro ao listar laudos', detalhes: error.message });
+    }
+});
+
+/**
+ * @swagger
+ * /api/laudos/{id}:
+ *   get:
+ *     summary: Obtém um laudo por ID
+ *     tags: [Laudos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Laudo encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 laudo:
+ *                   $ref: '#/components/schemas/Laudo'
+ *       400:
+ *         description: ID inválido
+ *       401:
+ *         description: Token não fornecido ou inválido
+ *       404:
+ *         description: Laudo não encontrado
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.get('/:id', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, erro: 'ID inválido' });
+        }
+        const laudo = await Laudo.findById(id).populate('peritoResponsavel', 'nome');
+        if (!laudo) {
+            return res.status(404).json({ success: false, erro: 'Laudo não encontrado' });
+        }
+        res.json({ success: true, laudo });
+    } catch (error) {
+        console.error('Erro ao obter laudo:', error);
+        res.status(500).json({ success: false, erro: 'Erro ao obter laudo', detalhes: error.message });
+    }
+});
+
+/**
+ * @swagger
+ * /api/laudos:
  *   post:
  *     summary: Gera um novo laudo pericial com conteúdo gerado por IA para uma evidência
  *     tags: [Laudos]
