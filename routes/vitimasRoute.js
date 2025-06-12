@@ -462,4 +462,69 @@ router.delete('/:id', verifyToken, async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Vitima:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: ID da vítima
+ *         casoId:
+ *           type: string
+ *           description: ID do caso associado
+ *         NIC:
+ *           type: string
+ *           description: Número de Identificação Criminal (único, gerado automaticamente)
+ *         nome:
+ *           type: string
+ *           description: Nome da vítima
+ *         genero:
+ *           type: string
+ *           description: Gênero da vítima
+ *         idade:
+ *           type: number
+ *           nullable: true
+ *           description: Idade da vítima
+ *         cpf:
+ *           type: string
+ *           description: CPF da vítima
+ *         endereco:
+ *           type: string
+ *           description: Endereço da vítima
+ *         etnia:
+ *           type: string
+ *           enum: ["Branca", "Preta", "Parda", "Amarela", "Indígena", "Não identificado"]
+ *           description: Etnia da vítima
+ *         odontograma:
+ *           type: object
+ *           properties:
+ *             superiorEsquerdo:
+ *               type: array
+ *               items:
+ *                 type: string
+ *             superiorDireito:
+ *               type: array
+ *               items:
+ *                 type: string
+ *             inferiorEsquerdo:
+ *               type: array
+ *               items:
+ *                 type: string
+ *             inferiorDireito:
+ *               type: array
+ *               items:
+ *                 type: string
+ *           description: Odontograma da vítima
+ *         anotacaoAnatomia:
+ *           type: string
+ *           description: Anotações anatômicas da vítima
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Data de criação do registro
+ */
+
 module.exports = router;

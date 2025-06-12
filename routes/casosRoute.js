@@ -469,4 +469,29 @@ router.delete("/:id", verifyToken, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Usuario:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: ID do usuário
+ *         cpf:
+ *           type: string
+ *           description: CPF do usuário
+ *         email:
+ *           type: string
+ *           description: Email do usuário
+ *         nome:
+ *           type: string
+ *           description: Nome do usuário
+ *         cargo:
+ *           type: string
+ *           enum: ["admin", "assistente", "perito"]
+ *           description: Cargo do usuário
+ */
+
 module.exports = router;
