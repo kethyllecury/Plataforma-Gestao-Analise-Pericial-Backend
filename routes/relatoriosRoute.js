@@ -238,6 +238,106 @@ const gerarPDF = async (titulo, caso, evidencias, vitimas, conteudo, assinatura 
 /**
  * @swagger
  * /api/relatorios:
+ *   get:
+ *     summary: Lista todos os relatórios com filtro opcional por casoId
+ *     tags: [Relatórios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: casoId
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: ID do caso para filtrar os relatórios
+ *     responses:
+ *       200:
+ *         description: Lista de relatórios
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 relatorios:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Relatorio'
+ *       401:
+ *         description: Token não fornecido ou inválido
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.get('/', verifyToken, async (req, res) => {
+    try {
+        const { casoId } = req.query;
+        const filtro = {};
+        if (casoId && mongoose.Types.ObjectId.isValid(casoId)) {
+            filtro.casoId = casoId;
+        }
+        const relatorios = await Relatorio.find(filtro).populate('peritoResponsavel', 'nome');
+        res.json({ success: true, relatorios });
+    } catch (error) {
+        console.error('Erro ao listar relatórios:', error);
+        res.status(500).json({ success: false, erro: 'Erro ao listar relatórios', detalhes: error.message });
+    }
+});
+
+/**
+ * @swagger
+ * /api/relatorios/{id}:
+ *   get:
+ *     summary: Obtém um relatório por ID
+ *     tags: [Relatórios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Relatório encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 relatorio:
+ *                   $ref: '#/components/schemas/Relatorio'
+ *       400:
+ *         description: ID inválido
+ *       401:
+ *         description: Token não fornecido ou inválido
+ *       404:
+ *         description: Relatório não encontrado
+ *       500:
+ *         description: Erro interno do servidor
+ */
+router.get('/:id', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, erro: 'ID inválido' });
+        }
+        const relatorio = await Relatorio.findById(id).populate('peritoResponsavel', 'nome');
+        if (!relatorio) {
+            return res.status(404).json({ success: false, erro: 'Relatório não encontrado' });
+        }
+        res.json({ success: true, relatorio });
+    } catch (error) {
+        console.error('Erro ao obter relatório:', error);
+        res.status(500).json({ success: false, erro: 'Erro ao obter relatório', detalhes: error.message });
+    }
+});
+
+/**
+ * @swagger
+ * /api/relatorios:
  *   post:
  *     summary: Gera um novo relatório com conteúdo gerado por IA para um caso
  *     tags: [Relatórios]
@@ -431,14 +531,14 @@ router.post('/:id/assinar', verifyToken, verificarErrosValidacao, async (req, re
         try {
             conteudo = await gerarConteudoRelatorioGemini(caso, evidencias, vitimas);
         } catch (error) {
-            console.warn('Usando conteúdo fallback devido a falha na API Gemini:', error.message);
-            // Buscar nome do perito para o fallback
+            console.warn('Usando conteúdo ao erro devido a falha na API Gemini:', error.message);
+            // Buscar nome do perito para o erro
             let peritoNome = 'N/A';
             if (caso.peritoResponsavel && mongoose.Types.ObjectId.isValid(caso.peritoResponsavel)) {
                 const perito = await Usuario.findById(caso.peritoResponsavel).select('nome');
                 peritoNome = perito ? perito.nome : 'N/A';
             }
-            conteudo = `Relatório pericial não pôde ser gerado automaticamente devido a uma falha na API de geração de conteúdo. Detalhes do caso:\n\n` +
+            conteudo = `Relatório não pôde ser gerado automaticamente devido a uma falha na API de geração de conteúdo. Detalhes do caso:\n\n` +
                        `Nome: ${caso.nome || 'N/A'}\n` +
                        `Local: ${caso.local || 'N/A'}\n` +
                        `Descrição: ${caso.descricao || 'N/A'}\n` +
